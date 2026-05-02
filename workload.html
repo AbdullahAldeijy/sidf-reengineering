@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة توزيع الطلبات - SIDF</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f7f9fb;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 30 L15 45 L30 30 L45 15 L60 30' fill='none' stroke='%23e5e7eb' stroke-width='0.5'/%3E%3C/svg%3E");
+        }
+        .active-sidebar-item {
+            color: #28a745;
+            background-color: #f0fdf4;
+            border-right: 4px solid #28a745;
+        }
+        .scroll-hide::-webkit-scrollbar { display: none; }
+        
+        /* Drag & Drop Styles */
+        .project-card {
+            cursor: grab;
+            transition: all 0.3s;
+        }
+        .project-card:active {
+            cursor: grabbing;
+            opacity: 0.7;
+        }
+        .project-card.dragging {
+            opacity: 0.5;
+            transform: rotate(2deg);
+        }
+        
+        .employee-card {
+            transition: all 0.3s;
+        }
+        .employee-card.drag-over {
+            background-color: #f0fdf4;
+            border: 2px dashed #28a745;
+            transform: scale(1.02);
+        }
+        
+        .drop-zone {
+            min-height: 120px;
+            transition: all 0.3s;
+        }
+        .drop-zone.drag-over {
+            background-color: #f0fdf4;
+            border: 2px dashed #28a745;
+        }
+        
+        /* Load Bar Animation */
+        .load-bar {
+            transition: width 0.5s ease, background-color 0.5s ease;
+        }
+        
+        /* Complexity Badge */
+        .complexity-critical { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .complexity-medium { background: #fed7aa; color: #9a3412; border: 1px solid #fdba74; }
+        .complexity-standard { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+        
+        /* Project Badge on Employee */
+        .project-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background: #e0f2fe;
+            color: #0369a1;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: bold;
+            margin: 2px;
+        }
+        
+        /* Pulse Animation for Empty State */
+        @keyframes pulse-border {
+            0%, 100% { border-color: #e5e7eb; }
+            50% { border-color: #28a745; }
+        }
+        .pulse-border {
+            animation: pulse-border 2s infinite;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-right">
+
+    <!-- Sidebar -->
+    <aside class="w-24 bg-white border-l border-gray-200 flex flex-col items-center py-6 shrink-0 z-20 shadow-sm">
+        <div class="mb-10 text-center">
+            <img src="images/SIDF_menu_logo.png" alt="Logo" class="w-12 h-12 object-contain mb-1 cursor-pointer" onclick="window.location.href='admin.html'">
+            <span class="text-[10px] text-gray-300 font-sans block">v2.0.5</span>
+        </div>
+
+        <nav class="w-full flex flex-col gap-1">
+            <a href="admin.html" class="flex flex-col items-center py-4 gap-1 text-[11px] text-gray-400 hover:bg-gray-50 transition-all">
+                <i data-lucide="layout-dashboard" class="w-6 h-6"></i>
+                <span>الرئيسية</span>
+            </a>
+            <a href="workload.html" class="active-sidebar-item flex flex-col items-center py-4 gap-1 text-[11px] font-bold">
+                <i data-lucide="split" class="w-6 h-6"></i>
+                <span>التوزيع</span>
+            </a>
+            <a href="employees.html" class="flex flex-col items-center py-4 gap-1 text-[11px] text-gray-400 hover:bg-gray-50 transition-all">
+                <i data-lucide="users" class="w-6 h-6"></i>
+                <span>الموظفين</span>
+            </a>
+            <a href="main.html" class="flex flex-col items-center py-4 mt-10 gap-1 text-[11px] text-red-300 hover:text-red-500 transition-all">
+                <i data-lucide="log-out" class="w-6 h-6"></i>
+                <span>خروج</span>
+            </a>
+        </nav>
+    </aside>
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+        
+        <!-- Header -->
+        <header class="bg-white h-16 border-b border-gray-100 flex items-center justify-between px-8 z-10 shadow-sm">
+            <div class="flex items-center gap-4">
+                <h1 class="text-[#002d5d] font-bold text-lg">لوحة توزيع الطلبات</h1>
+                <span class="text-xs text-gray-400 bg-gray-50 px-3 py-1 rounded-full">نظام السحب والإفلات</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="bg-green-600 rounded-full p-2 text-white shadow-sm"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 space-y-6 scroll-hide">
+            
+            <!-- Top Section: Complexity Legend -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-[#002d5d] font-bold text-sm flex items-center gap-2">
+                        <i data-lucide="gauge" class="w-5 h-5 text-[#28a745]"></i>
+                        أوزان تعقيد المهام
+                    </h3>
+                    <span class="text-[10px] text-gray-400 italic">مرجع سريع للمدير</span>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <!-- RM Tasks -->
+                    <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                        <h4 class="text-xs font-bold text-gray-700 mb-3 flex items-center gap-2">
+                            <i data-lucide="credit-card" class="w-4 h-4 text-blue-600"></i>
+                            إدارة الائتمان (RM)
+                        </h4>
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-[10px]">
+                                <span class="text-gray-600">إدخال البيانات</span>
+                                <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded font-bold">4</span>
+                            </div>
+                            <div class="flex justify-between text-[10px]">
+                                <span class="text-gray-600">الفحص المبدئي</span>
+                                <span class="px-2 py-0.5 bg-orange-100 text-orange-700 rounded font-bold">6</span>
+                            </div>
+                            <div class="flex justify-between text-[10px]">
+                                <span class="text-gray-600">التقييم</span>
+                                <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded font-bold">8</span>
+                            </div>
+                            <div class="flex justify-between text-[10px]">
+                                <span class="text-gray-600">التوقيع</span>
+                                <span class="px-2 py-0.5 bg-orange-100 text-orange-700 rounded font-bold">7</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PSD Tasks -->
+                    <div class="bg-green-50 rounded-xl p-4 border border-green-100">
+                        <h4 class="text-xs font-bold text-gray-700 mb-3 flex items-center gap-2">
+                            <i data-lucide="settings" class="w-4 h-4 text-green-600"></i>
+                            الإدارة الفنية (PSD)
+                        </h4>
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-[10px]">
+                                <span class="text-gray-600">المراجعة الفنية</span>
+                                <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded font-bold">9</span>
+                            </div>
+                            <div class="flex justify-between text-[10px]">
+                                <span class="text-gray-600">الموافقة النهائية</span>
+                                <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded font-bold">4</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MSD Tasks -->
+                    <div class="bg-red-50 rounded-xl p-4 border border-red-100">
+                        <h4 class="text-xs font-bold text-gray-700 mb-3 flex items-center gap-2">
+                            <i data-lucide="shield-alert" class="w-4 h-4 text-red-600"></i>
+                            إدارة المخاطر (MSD)
+                        </h4>
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-[10px]">
+                                <span class="text-gray-600">تقييم المخاطر</span>
+                                <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded font-bold">9</span>
+                            </div>
+                            <div class="flex justify-between text-[10px]">
+                                <span class="text-gray-600">التدقيق القانوني</span>
+                                <span class="px-2 py-0.5 bg-orange-100 text-orange-700 rounded font-bold">5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parallel Workspace: Requests | Distribution | Groups -->
+            <div class="grid grid-cols-12 gap-4 items-start">
+
+                <!-- Column 1: Incoming Requests Pool -->
+                <div class="col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-[#002d5d] font-bold text-sm flex items-center gap-2">
+                            <i data-lucide="inbox" class="w-4 h-4 text-orange-500"></i>
+                            الطلبات الواردة
+                        </h3>
+                        <span id="pool-count" class="text-[10px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-bold">5</span>
+                    </div>
+                    <div class="relative mb-2">
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2"></i>
+                        <input id="pool-search" type="text" oninput="filterPool()" placeholder="ابحث برقم أو اسم..."
+                               class="w-full bg-gray-50 border border-gray-200 rounded-lg pr-8 pl-2 py-1.5 text-[11px] outline-none focus:border-orange-400 focus:bg-white transition-all text-right">
+                    </div>
+                    <div id="incoming-pool" class="flex flex-col gap-2 overflow-y-auto pr-1 scroll-hide" style="max-height:70vh"></div>
+                </div>
+
+                <!-- Column 2: Distribution Canvas -->
+                <div class="col-span-5 bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-[#002d5d] font-bold text-sm flex items-center gap-2">
+                            <i data-lucide="layout-grid" class="w-4 h-4 text-[#28a745]"></i>
+                            ساحة التوزيع
+                        </h3>
+                        <span class="text-[9px] text-gray-400 italic">اسحب طلب على موظف أو موظف على مجموعة</span>
+                    </div>
+
+                    <div class="space-y-3 overflow-y-auto pr-1 scroll-hide" style="max-height:75vh">
+
+                        <!-- RM Department -->
+                        <div class="bg-blue-50/30 rounded-xl p-3 border-2 border-blue-200">
+                            <div class="flex items-center gap-2 mb-3 pb-2 border-b border-blue-200">
+                                <div class="bg-blue-500 p-1.5 rounded-lg">
+                                    <i data-lucide="credit-card" class="w-4 h-4 text-white"></i>
+                                </div>
+                                <h4 class="text-xs font-bold text-[#002d5d]">إدارة الائتمان</h4>
+                            </div>
+                            <div id="rm-employees" class="grid grid-cols-2 gap-2"></div>
+                        </div>
+
+                        <!-- PSD Department -->
+                        <div class="bg-green-50/30 rounded-xl p-3 border-2 border-green-200">
+                            <div class="flex items-center gap-2 mb-3 pb-2 border-b border-green-200">
+                                <div class="bg-green-500 p-1.5 rounded-lg">
+                                    <i data-lucide="settings" class="w-4 h-4 text-white"></i>
+                                </div>
+                                <h4 class="text-xs font-bold text-[#002d5d]">الإدارة الفنية</h4>
+                            </div>
+                            <div id="psd-employees" class="grid grid-cols-2 gap-2"></div>
+                        </div>
+
+                        <!-- MSD Department -->
+                        <div class="bg-red-50/30 rounded-xl p-3 border-2 border-red-200">
+                            <div class="flex items-center gap-2 mb-3 pb-2 border-b border-red-200">
+                                <div class="bg-red-500 p-1.5 rounded-lg">
+                                    <i data-lucide="shield-alert" class="w-4 h-4 text-white"></i>
+                                </div>
+                                <h4 class="text-xs font-bold text-[#002d5d]">إدارة المخاطر</h4>
+                            </div>
+                            <div id="msd-employees" class="grid grid-cols-2 gap-2"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Column 3: Groups -->
+                <div class="col-span-4 bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-[#002d5d] font-bold text-sm flex items-center gap-2">
+                            <i data-lucide="users-round" class="w-4 h-4 text-purple-600"></i>
+                            مجموعات العمل
+                            <span id="groups-count" class="text-[10px] bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full font-bold mr-1">5</span>
+                        </h3>
+                    </div>
+                    <div id="groups-container" class="space-y-2 overflow-y-auto pr-1 scroll-hide" style="max-height:75vh"></div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Data Structure
+        const incomingProjects = [
+            { id: 'RQ-1001', name: 'شركة الصناعات المتقدمة', complexity: 9 },
+            { id: 'RQ-1002', name: 'مصنع المعدات الثقيلة', complexity: 7 },
+            { id: 'RQ-1003', name: 'شركة التقنية الحديثة', complexity: 5 },
+            { id: 'RQ-1004', name: 'مجموعة البتروكيماويات', complexity: 8 },
+            { id: 'RQ-1005', name: 'شركة الطاقة المستدامة', complexity: 6 }
+        ];
+
+        const employees = {
+            rm: [
+                { id: 'rm-1', name: 'ناصر الراجحي', load: 2, maxLoad: 10, projects: [] },
+                { id: 'rm-2', name: 'أحمد علي', load: 7, maxLoad: 10, projects: [] }
+            ],
+            psd: [
+                { id: 'psd-1', name: 'سارة خالد', load: 1, maxLoad: 10, projects: [] },
+                { id: 'psd-2', name: 'فهد منصور', load: 8, maxLoad: 10, projects: [] }
+            ],
+            msd: [
+                { id: 'msd-1', name: 'ريم عبدالله', load: 1, maxLoad: 10, projects: [] },
+                { id: 'msd-2', name: 'خالد العمري', load: 6, maxLoad: 10, projects: [] }
+            ]
+        };
+
+        // Initialize
+        function init() {
+            renderIncomingProjects();
+            renderEmployees();
+        }
+
+        // Render Incoming Projects
+        function renderIncomingProjects() {
+            const pool = document.getElementById('incoming-pool');
+            pool.innerHTML = '';
+            
+            incomingProjects.forEach(project => {
+                const card = createProjectCard(project);
+                pool.appendChild(card);
+            });
+
+            updatePoolCount();
+            lucide.createIcons();
+            if (document.getElementById('pool-search')) filterPool();
+        }
+
+        // Create Project Card
+        function createProjectCard(project) {
+            const card = document.createElement('div');
+            card.className = 'project-card bg-white border-2 border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md';
+            card.draggable = true;
+            card.dataset.projectId = project.id;
+            card.dataset.complexity = project.complexity;
+
+            const complexityBadge = getComplexityBadge(project.complexity);
+
+            card.innerHTML = `
+                <div class="flex items-start justify-between mb-1.5">
+                    <div class="bg-orange-50 p-1.5 rounded-md">
+                        <i data-lucide="briefcase" class="w-3.5 h-3.5 text-orange-600"></i>
+                    </div>
+                    <span class="${complexityBadge.class} px-1.5 py-0.5 rounded text-[8px] font-bold flex items-center gap-0.5">
+                        <i data-lucide="${complexityBadge.icon}" class="w-2.5 h-2.5"></i>
+                        ${complexityBadge.text}
+                    </span>
+                </div>
+                <h4 class="text-[#002d5d] font-bold text-[11px] mb-0.5">${project.id}</h4>
+                <p class="text-[9px] text-gray-500 leading-snug truncate">${project.name}</p>
+                <div class="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
+                    <span class="text-[8px] text-gray-400">الوزن: ${project.complexity}/10</span>
+                    <i data-lucide="move" class="w-3 h-3 text-gray-300"></i>
+                </div>
+            `;
+
+            // Drag events
+            card.addEventListener('dragstart', handleDragStart);
+            card.addEventListener('dragend', handleDragEnd);
+
+            return card;
+        }
+
+        // Render Employees
+        function renderEmployees() {
+            ['rm', 'psd', 'msd'].forEach(dept => {
+                const container = document.getElementById(`${dept}-employees`);
+                container.innerHTML = '';
+                
+                employees[dept].forEach(emp => {
+                    const card = createEmployeeCard(emp, dept);
+                    container.appendChild(card);
+                });
+            });
+
+            lucide.createIcons();
+        }
+
+        // Create Employee Card
+        function createEmployeeCard(employee, dept) {
+            const card = document.createElement('div');
+            card.className = 'employee-card bg-white rounded-lg p-2.5 border-2 border-gray-200 shadow-sm';
+            card.draggable = true;
+            card.dataset.employeeId = employee.id;
+            card.dataset.dept = dept;
+            card.dataset.employeeName = employee.name;
+
+            const loadPercent = (employee.load / employee.maxLoad) * 100;
+            const loadColor = employee.load <= 4 ? 'bg-green-500' : employee.load <= 7 ? 'bg-orange-500' : 'bg-red-500';
+            const statusColor = employee.load <= 4 ? 'green' : employee.load <= 7 ? 'orange' : 'red';
+
+            card.innerHTML = `
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="bg-${statusColor}-100 p-1.5 rounded-full shrink-0">
+                        <i data-lucide="user" class="w-3 h-3 text-${statusColor}-600"></i>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <h5 class="text-[11px] font-bold text-[#002d5d] truncate">${employee.name}</h5>
+                        <span class="text-[8px] text-gray-400">${employee.projects.length} طلب</span>
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <div class="flex justify-between text-[9px] mb-0.5">
+                        <span class="text-gray-500">الحمل</span>
+                        <span class="font-bold text-[#002d5d]">${employee.load}/${employee.maxLoad}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                        <div class="load-bar ${loadColor} h-full rounded-full" style="width: ${loadPercent}%"></div>
+                    </div>
+                </div>
+
+                <div class="projects-list min-h-[20px] border-t border-gray-100 pt-1.5 flex flex-wrap gap-0.5">
+                    ${employee.projects.length > 0 ?
+                        employee.projects.map(p => `<span class="project-badge" style="font-size:8px;padding:1px 5px">${p}</span>`).join('') :
+                        '<span class="text-[8px] text-gray-300 italic">لا توجد طلبات</span>'
+                    }
+                </div>
+            `;
+
+            // Drop events (project → employee)
+            card.addEventListener('dragover', handleDragOver);
+            card.addEventListener('dragleave', handleDragLeave);
+            card.addEventListener('drop', handleDrop);
+
+            // Drag events (employee → group)
+            card.addEventListener('dragstart', handleEmployeeDragStart);
+            card.addEventListener('dragend', handleDragEnd);
+
+            return card;
+        }
+
+        // Complexity Badge Helper
+        function getComplexityBadge(weight) {
+            if (weight >= 8) {
+                return { class: 'complexity-critical', text: 'حرجة', icon: 'alert-octagon' };
+            } else if (weight >= 5) {
+                return { class: 'complexity-medium', text: 'متوسطة', icon: 'alert-triangle' };
+            } else {
+                return { class: 'complexity-standard', text: 'قياسية', icon: 'info' };
+            }
+        }
+
+        // Drag & Drop Handlers
+        let draggedProject = null;
+        let draggedEmployee = null;
+        let draggedType = null;
+
+        function handleDragStart(e) {
+            e.stopPropagation();
+            draggedType = 'project';
+            draggedEmployee = null;
+            draggedProject = {
+                id: this.dataset.projectId,
+                complexity: parseInt(this.dataset.complexity)
+            };
+            this.classList.add('dragging');
+        }
+
+        function handleEmployeeDragStart(e) {
+            e.stopPropagation();
+            draggedType = 'employee';
+            draggedProject = null;
+            draggedEmployee = {
+                id: this.dataset.employeeId,
+                name: this.dataset.employeeName,
+                dept: this.dataset.dept
+            };
+            this.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+
+            if (draggedType !== 'project' || !draggedProject) return;
+
+            const employeeId = this.dataset.employeeId;
+            const dept = this.dataset.dept;
+
+            // Find employee
+            const employee = employees[dept].find(emp => emp.id === employeeId);
+            if (!employee) return;
+
+            // Check if already assigned
+            if (employee.projects.includes(draggedProject.id)) {
+                alert('هذا الطلب معين بالفعل لهذا الموظف');
+                return;
+            }
+
+            // Check load capacity
+            const newLoad = employee.load + Math.ceil(draggedProject.complexity / 10 * 3);
+            if (newLoad > employee.maxLoad) {
+                if (!confirm(`تحذير: سيتجاوز الحمل السعة القصوى (${newLoad}/${employee.maxLoad}). هل تريد المتابعة؟`)) {
+                    return;
+                }
+            }
+
+            // Assign project
+            employee.load = Math.min(newLoad, employee.maxLoad);
+            employee.projects.push(draggedProject.id);
+
+            // Remove from incoming pool (only if assigned to all 3 departments)
+            const assignedCount = countProjectAssignments(draggedProject.id);
+            if (assignedCount >= 3) {
+                const index = incomingProjects.findIndex(p => p.id === draggedProject.id);
+                if (index > -1) {
+                    incomingProjects.splice(index, 1);
+                }
+            }
+
+            // Re-render
+            renderIncomingProjects();
+            renderEmployees();
+
+            // Show success message
+            showToast(`تم تعيين ${draggedProject.id} إلى ${employee.name}`, 'success');
+
+            draggedProject = null;
+        }
+
+        // Count how many departments a project is assigned to
+        function countProjectAssignments(projectId) {
+            let count = 0;
+            ['rm', 'psd', 'msd'].forEach(dept => {
+                employees[dept].forEach(emp => {
+                    if (emp.projects.includes(projectId)) {
+                        count++;
+                    }
+                });
+            });
+            return count;
+        }
+
+        // Update Pool Count
+        function updatePoolCount() {
+            document.getElementById('pool-count').textContent = incomingProjects.length;
+        }
+
+        // Filter pool by search
+        function filterPool() {
+            const q = document.getElementById('pool-search').value.trim().toLowerCase();
+            document.querySelectorAll('#incoming-pool .project-card').forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = !q || text.includes(q) ? '' : 'none';
+            });
+        }
+
+        // Toast Notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const colors = {
+                info: 'bg-blue-500',
+                success: 'bg-green-500',
+                warning: 'bg-orange-500'
+            };
+            toast.className = `fixed bottom-6 left-1/2 transform -translate-x-1/2 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg text-sm font-bold flex items-center gap-2 z-50`;
+            toast.innerHTML = `
+                <i data-lucide="${type === 'success' ? 'check-circle' : 'info'}" class="w-4 h-4"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ─── Groups ────────────────────────────────────────────────
+        let groups = [
+            { id: 'g-1', name: 'مجموعة 1', employees: [], projects: [] },
+            { id: 'g-2', name: 'مجموعة 2', employees: [], projects: [] },
+            { id: 'g-3', name: 'مجموعة 3', employees: [], projects: [] },
+            { id: 'g-4', name: 'مجموعة 4', employees: [], projects: [] },
+            { id: 'g-5', name: 'مجموعة 5', employees: [], projects: [] }
+        ];
+
+        function removeEmployeeFromGroup(groupId, empId) {
+            const g = groups.find(x => x.id === groupId);
+            if (g) g.employees = g.employees.filter(e => e.id !== empId);
+            renderGroups();
+        }
+
+        function removeProjectFromGroup(groupId, projectId) {
+            const g = groups.find(x => x.id === groupId);
+            if (g) g.projects = g.projects.filter(p => p !== projectId);
+            renderGroups();
+        }
+
+        function renderGroups() {
+            const container = document.getElementById('groups-container');
+            const counter = document.getElementById('groups-count');
+            counter.textContent = groups.length;
+            container.innerHTML = '';
+
+            groups.forEach(g => {
+                const card = document.createElement('div');
+                card.className = 'border-2 border-purple-200 bg-purple-50/30 rounded-lg p-2.5';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-purple-200">
+                        <div class="flex items-center gap-1.5">
+                            <div class="bg-purple-500 p-1 rounded">
+                                <i data-lucide="users-round" class="w-3 h-3 text-white"></i>
+                            </div>
+                            <h4 class="text-[11px] font-bold text-[#002d5d]">${g.name}</h4>
+                        </div>
+                        <span class="text-[8px] text-gray-400">${g.employees.length}م · ${g.projects.length}ط</span>
+                    </div>
+
+                    <div class="mb-1.5">
+                        <div class="text-[8px] text-gray-500 font-bold mb-0.5">الموظفون</div>
+                        <div class="group-zone group-emp-zone min-h-[36px] border-2 border-dashed border-purple-200 rounded p-1 bg-white flex flex-wrap gap-0.5 items-start" data-group-id="${g.id}" data-zone="employees">
+                            ${g.employees.length > 0 ? g.employees.map(e => `
+                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-[9px] font-bold">
+                                    <i data-lucide="user" class="w-2.5 h-2.5"></i>
+                                    ${e.name}
+                                    <button onclick="removeEmployeeFromGroup('${g.id}','${e.id}')" class="text-purple-400 hover:text-red-500 mr-0.5"><i data-lucide="x" class="w-2.5 h-2.5"></i></button>
+                                </span>
+                            `).join('') : '<span class="text-[8px] text-gray-300 italic self-center mx-auto">اسحب موظف</span>'}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-[8px] text-gray-500 font-bold mb-0.5">الطلبات</div>
+                        <div class="group-zone group-prj-zone min-h-[36px] border-2 border-dashed border-orange-200 rounded p-1 bg-white flex flex-wrap gap-0.5 items-start" data-group-id="${g.id}" data-zone="projects">
+                            ${g.projects.length > 0 ? g.projects.map(p => `
+                                <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded-full text-[9px] font-bold">
+                                    <i data-lucide="briefcase" class="w-2.5 h-2.5"></i>
+                                    ${p}
+                                    <button onclick="removeProjectFromGroup('${g.id}','${p}')" class="text-orange-400 hover:text-red-500 mr-0.5"><i data-lucide="x" class="w-2.5 h-2.5"></i></button>
+                                </span>
+                            `).join('') : '<span class="text-[8px] text-gray-300 italic self-center mx-auto">اسحب طلب</span>'}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.querySelectorAll('.group-zone').forEach(zone => {
+                zone.addEventListener('dragover', handleGroupDragOver);
+                zone.addEventListener('dragleave', handleGroupDragLeave);
+                zone.addEventListener('drop', handleGroupDrop);
+            });
+
+            lucide.createIcons();
+        }
+
+        function handleGroupDragOver(e) {
+            e.preventDefault();
+            this.style.borderColor = '#28a745';
+            this.style.background = '#f0fdf4';
+        }
+
+        function handleGroupDragLeave(e) {
+            this.style.borderColor = '';
+            this.style.background = '';
+        }
+
+        function handleGroupDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.style.borderColor = '';
+            this.style.background = '';
+
+            const groupId = this.dataset.groupId;
+            const zone = this.dataset.zone;
+            const group = groups.find(g => g.id === groupId);
+            if (!group) return;
+
+            if (zone === 'employees' && draggedType === 'employee' && draggedEmployee) {
+                if (group.employees.find(e => e.id === draggedEmployee.id)) {
+                    showToast('الموظف موجود مسبقاً في هذه المجموعة', 'warning');
+                } else {
+                    group.employees.push({ ...draggedEmployee });
+                    showToast(`تم إضافة ${draggedEmployee.name} إلى ${group.name}`, 'success');
+                    renderGroups();
+                }
+            } else if (zone === 'projects' && draggedType === 'project' && draggedProject) {
+                if (group.projects.includes(draggedProject.id)) {
+                    showToast('الطلب موجود مسبقاً في هذه المجموعة', 'warning');
+                } else {
+                    group.projects.push(draggedProject.id);
+                    showToast(`تم إضافة ${draggedProject.id} إلى ${group.name}`, 'success');
+                    renderGroups();
+                }
+            } else {
+                showToast('لا يمكن إفلات هذا العنصر هنا', 'warning');
+            }
+
+            draggedType = null;
+            draggedProject = null;
+            draggedEmployee = null;
+        }
+
+        // Initialize on load
+        init();
+        renderGroups();
+    </script>
+</body>
+</html>

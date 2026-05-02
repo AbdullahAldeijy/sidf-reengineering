@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الموظفين - SIDF</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f7f9fb;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 30 L15 45 L30 30 L45 15 L60 30' fill='none' stroke='%23e5e7eb' stroke-width='0.5'/%3E%3C/svg%3E");
+        }
+        .active-sidebar-item {
+            color: #28a745;
+            background-color: #f0fdf4;
+            border-right: 4px solid #28a745;
+        }
+        .scroll-hide::-webkit-scrollbar { display: none; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .toggle-switch { position: relative; width: 44px; height: 24px; background: #cbd5e1; border-radius: 12px; cursor: pointer; transition: 0.3s; }
+        .toggle-switch.active { background: #28a745; }
+        .toggle-switch::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; right: 3px; transition: 0.3s; }
+        .toggle-switch.active::after { right: 23px; }
+        .dept-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+        .dept-tech { background: #dcfce7; color: #166534; }
+        .dept-credit { background: #dbeafe; color: #1e40af; }
+        .dept-risk { background: #fee2e2; color: #991b1b; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: slideIn 0.3s ease-out; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-right">
+
+    <aside class="w-24 bg-white border-l border-gray-200 flex flex-col items-center py-6 shrink-0 z-20 shadow-sm">
+        <div class="mb-10 text-center">
+            <img src="images/SIDF_menu_logo.png" alt="Logo" class="w-12 h-12 object-contain mb-1">
+            <span class="text-[10px] text-gray-300 font-sans block">v2.0.5</span>
+        </div>
+
+        <nav class="w-full flex flex-col gap-1">
+            <a href="admin.html" class="flex flex-col items-center py-4 gap-1 text-[11px] text-gray-400 hover:bg-gray-50 transition-all">
+                <i data-lucide="layout-dashboard" class="w-6 h-6"></i>
+                <span>الرئيسية</span>
+            </a>
+            <a href="workload.html" class="flex flex-col items-center py-4 gap-1 text-[11px] text-gray-400 hover:bg-gray-50 transition-all">
+                <i data-lucide="split" class="w-6 h-6"></i>
+                <span>التوزيع</span>
+            </a>
+            <a href="employees.html" class="active-sidebar-item flex flex-col items-center py-4 gap-1 text-[11px] font-bold">
+                <i data-lucide="users" class="w-6 h-6"></i>
+                <span>الموظفين</span>
+            </a>
+
+            <a href="main.html" class="flex flex-col items-center py-4 mt-10 gap-1 text-[11px] text-red-300 hover:text-red-500 transition-all">
+                <i data-lucide="log-out" class="w-6 h-6"></i>
+                <span>خروج</span>
+            </a>
+        </nav>
+    </aside>
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+        
+        <header class="bg-white h-16 border-b border-gray-100 flex items-center justify-between px-8 z-10 shadow-sm">
+            <div class="flex items-center gap-4">
+                <h1 class="text-[#002d5d] font-bold text-lg">إدارة الموظفين</h1>
+                <button onclick="openAddModal()" class="bg-[#28a745] hover:bg-green-700 text-white px-5 py-2 rounded-full text-xs font-bold flex items-center gap-2 transition-all shadow-lg">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i> إضافة موظف جديد
+                </button>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="bg-green-600 rounded-full p-2 text-white shadow-sm"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 space-y-6 scroll-hide">
+            
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">إجمالي الموظفين</p>
+                            <h3 class="text-2xl font-bold text-[#002d5d]" id="total-employees">6</h3>
+                        </div>
+                        <div class="bg-blue-50 p-2 rounded-lg">
+                            <i data-lucide="users" class="w-5 h-5 text-blue-600"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">الدراسة الفنية</p>
+                            <h3 class="text-2xl font-bold text-green-600" id="tech-count">2</h3>
+                        </div>
+                        <div class="bg-green-50 p-2 rounded-lg">
+                            <i data-lucide="settings" class="w-5 h-5 text-green-600"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">الائتمان</p>
+                            <h3 class="text-2xl font-bold text-blue-600" id="credit-count">2</h3>
+                        </div>
+                        <div class="bg-blue-50 p-2 rounded-lg">
+                            <i data-lucide="credit-card" class="w-5 h-5 text-blue-600"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">المخاطر</p>
+                            <h3 class="text-2xl font-bold text-red-600" id="risk-count">2</h3>
+                        </div>
+                        <div class="bg-red-50 p-2 rounded-lg">
+                            <i data-lucide="shield-alert" class="w-5 h-5 text-red-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employees Table -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-gray-50 flex justify-between items-center bg-gray-50/20">
+                    <h3 class="text-[#002d5d] font-bold text-sm flex items-center gap-2">
+                        <i data-lucide="users-2" class="w-5 h-5 text-green-600"></i>
+                        قائمة الموظفين الحاليين
+                    </h3>
+                    <span class="text-[10px] text-gray-400 font-bold italic">إدارة الفريق والصلاحيات</span>
+                </div>
+                <table class="w-full text-right text-xs">
+                    <thead class="bg-[#eef5ed] text-gray-600 font-bold">
+                        <tr>
+                            <th class="p-4 border-l border-white">الرقم الوظيفي</th>
+                            <th class="p-4 border-l border-white">اسم الموظف</th>
+                            <th class="p-4 border-l border-white">البريد الإلكتروني</th>
+                            <th class="p-4 border-l border-white text-center">الإدارة</th>
+                            <th class="p-4 border-l border-white text-center">حمل العمل</th>
+                            <th class="p-4 border-l border-white text-center">الحالة</th>
+                            <th class="p-4 text-center">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employees-table" class="divide-y divide-gray-50">
+                        <!-- Employees will be rendered here -->
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Add Employee Modal -->
+    <div id="add-modal" class="modal">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 fade-in">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-[#002d5d] font-bold text-lg flex items-center gap-2">
+                    <i data-lucide="user-plus" class="w-5 h-5 text-green-600"></i>
+                    إضافة موظف جديد
+                </h3>
+                <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <form id="add-employee-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-2">الاسم الكامل</label>
+                    <input type="text" id="emp-name" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" placeholder="أدخل الاسم الكامل">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-2">الرقم الوظيفي</label>
+                    <input type="text" id="emp-id" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" placeholder="مثال: EMP-001">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-2">البريد الإلكتروني</label>
+                    <input type="email" id="emp-email" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" placeholder="example@sidf.gov.sa">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-2">الإدارة</label>
+                    <select id="emp-dept" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                        <option value="">اختر الإدارة</option>
+                        <option value="tech">الدراسة الفنية</option>
+                        <option value="credit">الائتمان</option>
+                        <option value="risk">المخاطر</option>
+                    </select>
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="flex-1 bg-[#28a745] hover:bg-green-700 text-white py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        إضافة
+                    </button>
+                    <button type="button" onclick="closeAddModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-lg font-bold text-sm transition-all">
+                        إلغاء
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Employee Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 fade-in">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-[#002d5d] font-bold text-lg flex items-center gap-2">
+                    <i data-lucide="edit" class="w-5 h-5 text-blue-600"></i>
+                    تعديل بيانات الموظف
+                </h3>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <form id="edit-employee-form" class="space-y-4">
+                <input type="hidden" id="edit-emp-index">
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-2">الاسم الكامل</label>
+                    <input type="text" id="edit-emp-name" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-2">الرقم الوظيفي</label>
+                    <input type="text" id="edit-emp-id" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-2">البريد الإلكتروني</label>
+                    <input type="email" id="edit-emp-email" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-2">الإدارة</label>
+                    <select id="edit-emp-dept" required class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        <option value="tech">الدراسة الفنية</option>
+                        <option value="credit">الائتمان</option>
+                        <option value="risk">المخاطر</option>
+                    </select>
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="flex-1 bg-[#002d5d] hover:bg-blue-900 text-white py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        حفظ التعديلات
+                    </button>
+                    <button type="button" onclick="closeEditModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-lg font-bold text-sm transition-all">
+                        إلغاء
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        let employees = [
+            {id: 'EMP-001', name: 'سارة خالد', email: 'sara.k@sidf.gov.sa', dept: 'tech', load: 15, active: true},
+            {id: 'EMP-002', name: 'فهد منصور', email: 'fahad.m@sidf.gov.sa', dept: 'tech', load: 70, active: true},
+            {id: 'EMP-003', name: 'ناصر الراجحي', email: 'nasser.r@sidf.gov.sa', dept: 'credit', load: 25, active: true},
+            {id: 'EMP-004', name: 'أحمد علي', email: 'ahmed.a@sidf.gov.sa', dept: 'credit', load: 85, active: true},
+            {id: 'EMP-005', name: 'ريم عبدالله', email: 'reem.a@sidf.gov.sa', dept: 'risk', load: 10, active: true},
+            {id: 'EMP-006', name: 'خالد العمري', email: 'khaled.o@sidf.gov.sa', dept: 'risk', load: 55, active: true}
+        ];
+
+        const deptNames = {
+            tech: 'الدراسة الفنية',
+            credit: 'الائتمان',
+            risk: 'المخاطر'
+        };
+
+        function renderEmployees() {
+            const tbody = document.getElementById('employees-table');
+            tbody.innerHTML = '';
+            
+            employees.forEach((emp, index) => {
+                const deptClass = `dept-${emp.dept}`;
+                const loadColor = emp.load < 30 ? 'bg-green-500' : emp.load < 70 ? 'bg-orange-500' : 'bg-red-500';
+                
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-all';
+                row.innerHTML = `
+                    <td class="p-4 font-bold text-[#002d5d]">${emp.id}</td>
+                    <td class="p-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-white font-bold text-xs">
+                                ${emp.name.charAt(0)}
+                            </div>
+                            <span class="font-bold text-gray-700">${emp.name}</span>
+                        </div>
+                    </td>
+                    <td class="p-4 text-gray-500">${emp.email}</td>
+                    <td class="p-4 text-center">
+                        <span class="dept-badge ${deptClass}">${deptNames[emp.dept]}</span>
+                    </td>
+                    <td class="p-4">
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div class="${loadColor} h-full rounded-full" style="width: ${emp.load}%"></div>
+                            </div>
+                            <span class="text-[10px] font-bold text-gray-600 w-8">${emp.load}%</span>
+                        </div>
+                    </td>
+                    <td class="p-4 text-center">
+                        <div class="toggle-switch ${emp.active ? 'active' : ''}" onclick="toggleStatus(${index})"></div>
+                    </td>
+                    <td class="p-4">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="openQuickAssign(${index})" class="p-2 hover:bg-blue-50 rounded-lg transition-all" title="تعيين سريع">
+                                <i data-lucide="repeat" class="w-4 h-4 text-blue-600"></i>
+                            </button>
+                            <button onclick="editEmployee(${index})" class="p-2 hover:bg-green-50 rounded-lg transition-all" title="تعديل">
+                                <i data-lucide="edit" class="w-4 h-4 text-green-600"></i>
+                            </button>
+                            <button onclick="deleteEmployee(${index})" class="p-2 hover:bg-red-50 rounded-lg transition-all" title="حذف">
+                                <i data-lucide="trash-2" class="w-4 h-4 text-red-600"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            lucide.createIcons();
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('total-employees').textContent = employees.length;
+            document.getElementById('tech-count').textContent = employees.filter(e => e.dept === 'tech').length;
+            document.getElementById('credit-count').textContent = employees.filter(e => e.dept === 'credit').length;
+            document.getElementById('risk-count').textContent = employees.filter(e => e.dept === 'risk').length;
+        }
+
+        function openAddModal() {
+            document.getElementById('add-modal').classList.add('active');
+            document.getElementById('add-employee-form').reset();
+        }
+
+        function closeAddModal() {
+            document.getElementById('add-modal').classList.remove('active');
+        }
+
+        function openEditModal() {
+            document.getElementById('edit-modal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.remove('active');
+        }
+
+        document.getElementById('add-employee-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newEmp = {
+                id: document.getElementById('emp-id').value,
+                name: document.getElementById('emp-name').value,
+                email: document.getElementById('emp-email').value,
+                dept: document.getElementById('emp-dept').value,
+                load: 0,
+                active: true
+            };
+            
+            employees.push(newEmp);
+            renderEmployees();
+            closeAddModal();
+            
+            showNotification('تم إضافة الموظف بنجاح', 'success');
+        });
+
+        document.getElementById('edit-employee-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const index = document.getElementById('edit-emp-index').value;
+            employees[index] = {
+                ...employees[index],
+                id: document.getElementById('edit-emp-id').value,
+                name: document.getElementById('edit-emp-name').value,
+                email: document.getElementById('edit-emp-email').value,
+                dept: document.getElementById('edit-emp-dept').value
+            };
+            
+            renderEmployees();
+            closeEditModal();
+            
+            showNotification('تم تحديث بيانات الموظف بنجاح', 'success');
+        });
+
+        function editEmployee(index) {
+            const emp = employees[index];
+            document.getElementById('edit-emp-index').value = index;
+            document.getElementById('edit-emp-id').value = emp.id;
+            document.getElementById('edit-emp-name').value = emp.name;
+            document.getElementById('edit-emp-email').value = emp.email;
+            document.getElementById('edit-emp-dept').value = emp.dept;
+            openEditModal();
+        }
+
+        function deleteEmployee(index) {
+            if (confirm(`هل أنت متأكد من حذف الموظف ${employees[index].name}؟`)) {
+                employees.splice(index, 1);
+                renderEmployees();
+                showNotification('تم حذف الموظف بنجاح', 'error');
+            }
+        }
+
+        function toggleStatus(index) {
+            employees[index].active = !employees[index].active;
+            renderEmployees();
+            const status = employees[index].active ? 'تفعيل' : 'تعطيل';
+            showNotification(`تم ${status} الموظف بنجاح`, 'info');
+        }
+
+        function openQuickAssign(index) {
+            const emp = employees[index];
+            const depts = ['tech', 'credit', 'risk'].filter(d => d !== emp.dept);
+            
+            const options = depts.map(d => `<option value="${d}">${deptNames[d]}</option>`).join('');
+            
+            const result = prompt(`تعيين سريع للموظف: ${emp.name}\n\nاختر الإدارة الجديدة:\n1. ${deptNames[depts[0]]}\n2. ${deptNames[depts[1]]}\n\nأدخل رقم الاختيار (1 أو 2):`);
+            
+            if (result === '1' || result === '2') {
+                const newDept = depts[parseInt(result) - 1];
+                employees[index].dept = newDept;
+                renderEmployees();
+                showNotification(`تم نقل ${emp.name} إلى ${deptNames[newDept]}`, 'success');
+            }
+        }
+
+        function showNotification(message, type) {
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                info: 'bg-blue-500'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = `fixed top-20 left-1/2 transform -translate-x-1/2 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 fade-in`;
+            notification.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    <span class="font-bold text-sm">${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Initial render
+        renderEmployees();
+    </script>
+</body>
+</html>

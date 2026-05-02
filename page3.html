@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طلب القرض - SIDF</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f7f9fb;
+            /* نمط الخلفية المتقاطع كما في الصورة */
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 30 L15 45 L30 30 L45 15 L60 30' fill='none' stroke='%23e5e7eb' stroke-width='0.5'/%3E%3C/svg%3E");
+        }
+        .active-sidebar-item {
+            color: #28a745;
+            background-color: #f0fdf4;
+            border-right: 4px solid #28a745;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <aside class="w-24 bg-white border-l border-gray-200 flex flex-col items-center py-4 shrink-0 shadow-sm z-20">
+        <div class="mb-8 text-center">
+            <a href="page2.html"><img src="images/SIDF_menu_logo.png" alt="SIDF Logo" class="w-12 h-12 object-contain mb-1 cursor-pointer"></a>
+            <div class="text-[10px] text-gray-300 font-sans">v2.0.5</div>
+        </div>
+
+        <nav class="w-full flex flex-col">
+            <a href="#" class="flex flex-col items-center py-4 text-gray-400 hover:text-green-600 transition-all">
+                <i data-lucide="layout-grid" class="w-6 h-6 mb-1"></i>
+            </a>
+            <a href="#" class="flex flex-col items-center py-4 text-gray-400 hover:text-green-600 transition-all">
+                <i data-lucide="flag" class="w-6 h-6 mb-1"></i>
+            </a>
+            <a href="#" class="flex flex-col items-center py-4 text-gray-400 hover:text-green-600 transition-all">
+                <i data-lucide="mail" class="w-6 h-6 mb-1"></i>
+            </a>
+            <a href="#" class="active-sidebar-item flex flex-col items-center py-4 transition-all">
+                <i data-lucide="briefcase" class="w-6 h-6 mb-1"></i>
+                <span class="text-[10px] font-bold">المشاريع</span>
+            </a>
+            <a href="#" class="flex flex-col items-center py-4 text-gray-400 hover:text-green-600 transition-all">
+                <i data-lucide="phone" class="w-6 h-6 mb-1"></i>
+            </a>
+            <a href="#" class="flex flex-col items-center py-4 text-gray-400 hover:text-green-600 transition-all">
+                <i data-lucide="file-text" class="w-6 h-6 mb-1"></i>
+            </a>
+        </nav>
+    </aside>
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+        
+        <header class="bg-white h-14 border-b border-gray-100 flex items-center justify-between px-6 shrink-0 z-10">
+            <h1 class="text-[#002d5d] font-bold text-lg">طلب القرض</h1>
+
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1 text-gray-400 text-xs ml-4 cursor-pointer">
+                    <span>English</span>
+                    <i data-lucide="globe" class="w-4 h-4"></i>
+                </div>
+                
+                <button onclick="switchStep(1)" class="bg-[#28a745] text-white px-4 py-1.5 rounded-md flex items-center gap-2 text-xs font-bold">
+                    جديد <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                </button>
+
+                <div class="bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-md flex items-center gap-4 text-xs text-gray-600 cursor-pointer">
+                    <i data-lucide="chevron-down" class="w-3 h-3 text-gray-300"></i>
+                    <span>شركة X</span>
+                </div>
+
+                <div class="flex items-center gap-1 cursor-pointer" onclick="window.location.href='main.html'">
+                    <i data-lucide="chevron-down" class="w-3 h-3 text-gray-300"></i>
+                    <div class="bg-green-600 rounded-full p-1.5 text-white">
+                        <i data-lucide="user" class="w-4 h-4"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 scroll-smooth">
+            
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-6">
+                <div class="flex items-center relative">
+                    <div class="absolute top-5 right-0 left-0 flex px-24">
+                        <div id="line-1-2" class="h-[2px] bg-green-500 flex-1 transition-all duration-300"></div>
+                        <div id="line-2-3" class="h-[2px] bg-green-500 flex-1 transition-all duration-300"></div>
+                    </div>
+
+                    <div onclick="switchStep(1)" class="flex flex-col items-center flex-1 z-10 cursor-pointer">
+                        <div id="step-circle-1" class="w-10 h-10 rounded-full border-2 border-orange-400 bg-white flex items-center justify-center text-orange-400 font-bold mb-2">1</div>
+                        <span id="step-text-1" class="text-[11px] text-[#002d5d] font-bold">التحقق من معلومات المنشأة والملكية</span>
+                        <div class="w-12 h-1 bg-gray-100 rounded-full mt-1"><div id="progress-1" class="bg-orange-400 h-full w-0"></div></div>
+                        <span class="text-[9px] text-gray-400">0%</span>
+                    </div>
+
+                    <div onclick="switchStep(2)" class="flex flex-col items-center flex-1 z-10 cursor-pointer">
+                        <div id="step-circle-2" class="w-10 h-10 rounded-full border-2 border-green-500 bg-white flex items-center justify-center text-green-500 font-bold mb-2">2</div>
+                        <span id="step-text-2" class="text-[11px] text-gray-400 font-bold">معلومات المشروع</span>
+                        <div class="w-12 h-1 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                            <div id="progress-2" class="bg-green-500 h-full w-0"></div>
+                        </div>
+                        <span class="text-[9px] text-gray-400">0%</span>
+                    </div>
+
+                    <div onclick="switchStep(3)" class="flex flex-col items-center flex-1 z-10 cursor-pointer">
+                        <div id="step-circle-3" class="w-10 h-10 rounded-full border-2 border-green-500 bg-white flex items-center justify-center text-green-500 font-bold mb-2">3</div>
+                        <span id="step-text-3" class="text-[11px] text-gray-400 font-bold">المعلومات المالية</span>
+                        <div class="w-12 h-1 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                            <div id="progress-3" class="bg-green-500 h-full w-0"></div>
+                        </div>
+                        <span class="text-[9px] text-gray-400">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="step-1-content">
+
+                <!-- 0. محاكي ربط API -->
+                <div class="bg-gradient-to-l from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 mb-4 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-[#002d5d] text-white rounded-lg p-2.5">
+                            <i data-lucide="link-2" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <div class="text-[#002d5d] font-bold text-sm">محاكي ربط API الحكومي</div>
+                            <div class="text-[11px] text-gray-500">اضغط لجلب البيانات تلقائياً من الجهات الحكومية</div>
+                        </div>
+                    </div>
+                    <button id="api-sim-btn" onclick="simulateApiConnection()" class="bg-[#002d5d] text-white px-5 py-2 rounded-md text-xs font-bold flex items-center gap-2 hover:opacity-90 transition-all">
+                        <i data-lucide="zap" class="w-4 h-4" id="api-sim-btn-icon"></i>
+                        <span id="api-sim-btn-text">اتصال بـ API</span>
+                    </button>
+                </div>
+
+                <!-- 1. تفاصيل الترخيص -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+                    <div onclick="toggleAccordion('acc-license')" class="p-4 px-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30 cursor-pointer">
+                        <h3 class="text-[#002d5d] font-bold text-sm">تفاصيل الترخيص</h3>
+                        <i data-lucide="chevron-up" class="w-4 h-4 text-gray-300 transition-transform" id="acc-license-icon"></i>
+                    </div>
+                    <div id="acc-license" class="p-8">
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div id="api-ministry-trade" class="border border-gray-200 p-4 rounded-lg flex justify-between items-center text-gray-400 text-xs cursor-pointer hover:border-green-300 transition-colors">
+                                <div class="w-5 h-5 rounded-full border-2 border-gray-300"></div>
+                                <div class="text-right font-bold">وزارة التجارة</div>
+                            </div>
+                            <div class="border border-gray-200 p-4 rounded-lg flex justify-between items-center text-gray-400 text-xs cursor-pointer hover:border-green-300 transition-colors">
+                                <div class="w-5 h-5 rounded-full border-2 border-gray-300"></div>
+                                <div class="text-right font-bold">وزارة الاستثمار</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-6 mb-6">
+                            <div class="relative">
+                                <label class="block text-[11px] text-gray-400 mb-2">رقم السجل التجاري</label>
+                                <div class="flex items-center border-b-2 border-gray-200 focus-within:border-green-500 transition-colors">
+                                    <input id="api-cr-number" type="text" value="" placeholder="—" class="w-full py-2 text-sm text-gray-700 bg-transparent outline-none text-right" readonly>
+                                    <i data-lucide="hash" class="w-4 h-4 text-gray-300 ml-2"></i>
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <label class="block text-[11px] text-gray-400 mb-2">تاريخ الإصدار</label>
+                                <div class="flex items-center border-b-2 border-gray-200 focus-within:border-green-500 transition-colors">
+                                    <input id="api-cr-date" type="text" value="" placeholder="—" class="w-full py-2 text-sm text-gray-700 bg-transparent outline-none text-right" readonly>
+                                    <i data-lucide="calendar" class="w-4 h-4 text-gray-300 ml-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between bg-gray-50 rounded-lg p-4">
+                            <span class="text-sm text-gray-600 font-bold">هل لديك ترخيص صناعي؟</span>
+                            <div id="api-industrial-toggle" onclick="this.querySelector('div').classList.toggle('translate-x-0');this.querySelector('div').classList.toggle('-translate-x-5');this.classList.toggle('bg-green-500');this.classList.toggle('bg-gray-300')" class="w-11 h-6 bg-gray-300 rounded-full relative cursor-pointer transition-colors">
+                                <div class="w-5 h-5 bg-white rounded-full shadow absolute top-0.5 right-0.5 transition-transform translate-x-0"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. معلومات تفويض الصلاحيات -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+                    <div onclick="toggleAccordion('acc-auth')" class="p-4 px-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30 cursor-pointer">
+                        <h3 class="text-[#002d5d] font-bold text-sm">معلومات تفويض الصلاحيات</h3>
+                        <i data-lucide="chevron-up" class="w-4 h-4 text-gray-300 transition-transform" id="acc-auth-icon"></i>
+                    </div>
+                    <div id="acc-auth" class="p-8">
+                        <div class="border border-gray-100 rounded-lg overflow-hidden mb-6">
+                            <table class="w-full text-right text-xs">
+                                <thead class="bg-[#eef5ed] text-gray-600">
+                                    <tr>
+                                        <th class="p-3 border-l border-white font-bold">اسم المفوض</th>
+                                        <th class="p-3 border-l border-white font-bold">نوع الهوية</th>
+                                        <th class="p-3 border-l border-white font-bold">رقم الهوية</th>
+                                        <th class="p-3 border-l border-white font-bold">رقم الجوال</th>
+                                        <th class="p-3 font-bold">البريد الإلكتروني</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="api-auth-tbody">
+                                    <tr id="api-auth-row" class="h-16 bg-white"><td></td><td></td><td></td><td></td><td></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="bg-[#fef2f2] border border-red-100 p-4 rounded-lg text-red-600 text-sm flex items-center gap-2">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
+                            <span>يرجى إرفاق المستندات الخاصة بالأشخاص المفوضين التاليين</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. معلومات السجل التجاري -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+                    <div onclick="toggleAccordion('acc-cr')" class="p-4 px-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30 cursor-pointer">
+                        <h3 class="text-[#002d5d] font-bold text-sm">معلومات السجل التجاري</h3>
+                        <i data-lucide="chevron-up" class="w-4 h-4 text-gray-300 transition-transform" id="acc-cr-icon"></i>
+                    </div>
+                    <div id="acc-cr" class="p-8">
+                        <div class="border border-gray-100 rounded-lg overflow-hidden mb-6">
+                            <table class="w-full text-right text-xs">
+                                <thead class="bg-[#eef5ed] text-gray-600">
+                                    <tr>
+                                        <th class="p-3 border-l border-white font-bold">اسم المنشأة</th>
+                                        <th class="p-3 border-l border-white font-bold">رقم السجل</th>
+                                        <th class="p-3 border-l border-white font-bold">المدينة</th>
+                                        <th class="p-3 border-l border-white font-bold">التاريخ</th>
+                                        <th class="p-3 border-l border-white font-bold">رأس المال</th>
+                                        <th class="p-3 font-bold">الإجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="api-cr-tbody">
+                                    <tr id="api-cr-row" class="h-16 bg-white"><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. معلومات المالك -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+                    <div onclick="toggleAccordion('acc-owner')" class="p-4 px-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30 cursor-pointer">
+                        <h3 class="text-[#002d5d] font-bold text-sm">معلومات المالك</h3>
+                        <i data-lucide="chevron-up" class="w-4 h-4 text-gray-300 transition-transform" id="acc-owner-icon"></i>
+                    </div>
+                    <div id="acc-owner" class="p-8">
+                        <div class="flex justify-end mb-4">
+                            <button class="bg-[#28a745] text-white px-5 py-1.5 rounded-md text-xs font-bold flex items-center gap-2 hover:bg-green-700 transition-colors">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                أضف مالك
+                            </button>
+                        </div>
+                        <div class="border border-gray-100 rounded-lg overflow-hidden mb-6">
+                            <table class="w-full text-right text-xs">
+                                <thead class="bg-[#eef5ed] text-gray-600">
+                                    <tr>
+                                        <th class="p-3 border-l border-white font-bold">اسم المالك</th>
+                                        <th class="p-3 border-l border-white font-bold">نسبة الملكية</th>
+                                        <th class="p-3 border-l border-white font-bold">منصب المالك</th>
+                                        <th class="p-3 font-bold">شراكة في منشأة أخرى</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="api-owner-tbody">
+                                    <tr id="api-owner-row" class="h-16 bg-white"><td></td><td></td><td></td><td></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="bg-[#fef2f2] border border-red-100 p-4 rounded-lg text-red-600 text-sm flex items-center gap-2">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
+                            <span>يجب إضافة مالك واحد على الأقل</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. أقسام ثابتة -->
+                <div class="bg-white rounded-lg border-r-4 border-green-500 shadow-sm p-4 flex items-center gap-2 mb-2">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-green-600"></i>
+                    <span class="text-green-600 font-bold text-sm">معلومات الممتلكات العقارية</span>
+                </div>
+                <div class="bg-white rounded-lg border-r-4 border-green-500 shadow-sm p-4 flex items-center gap-2 mb-6">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-green-600"></i>
+                    <span class="text-green-600 font-bold text-sm">استثمارات أخرى</span>
+                </div>
+
+            </div>
+
+            <div id="step-2-content" class="hidden">
+
+                <!-- PATH SELECTOR -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div id="opt-upload" onclick="switchPath('upload')" class="relative bg-[#28a745] text-white p-5 rounded-xl flex items-center gap-4 cursor-pointer shadow-md transition-all">
+                        <div class="bg-white/20 p-3 rounded-lg shrink-0"><i data-lucide="upload-cloud" class="w-7 h-7"></i></div>
+                        <div>
+                            <div class="font-bold text-sm">إرفاق ملف المشروع</div>
+                            <div class="text-xs opacity-80 mt-0.5">ارفع ملف PDF أو Word جاهز</div>
+                        </div>
+                        <span id="badge-upload" class="absolute top-2 left-2 bg-white text-[#28a745] rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">✓</span>
+                    </div>
+                    <div id="opt-template" onclick="switchPath('template')" class="relative bg-white border-2 border-gray-200 text-gray-500 p-5 rounded-xl flex items-center gap-4 cursor-pointer hover:border-green-300 transition-all">
+                        <div class="bg-gray-100 p-3 rounded-lg shrink-0"><i data-lucide="file-edit" class="w-7 h-7"></i></div>
+                        <div>
+                            <div class="font-bold text-sm text-gray-700">دراسة الجدوى</div>
+                            <div class="text-xs mt-0.5">أدخل البيانات وسيتم إنشاء المستند</div>
+                        </div>
+                        <span id="badge-template" style="display:none" class="absolute top-2 left-2 bg-[#28a745] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">✓</span>
+                    </div>
+                </div>
+
+                <!-- PRODUCT / SERVICE SELECTOR -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
+                    <div class="p-4 px-6 border-b border-gray-100 flex items-center gap-2">
+                        <i data-lucide="layers" class="w-4 h-4 text-[#28a745]"></i>
+                        <span class="text-[#002d5d] font-bold text-sm">اختر المنتج أو الخدمة</span>
+                        <span class="text-[10px] text-gray-400 mr-auto">يمكنك اختيار أكثر من خيار</span>
+                    </div>
+                    <div class="p-5 space-y-4">
+
+                        <!-- 1. Financial Products -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="bg-[#002d5d] text-white text-[10px] font-bold px-2 py-0.5 rounded">1</span>
+                                <span class="text-[#002d5d] font-bold text-sm">المنتجات المالية</span>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2">
+                                <div onclick="toggleProduct(this)" data-key="project-finance" data-label="تمويل المشاريع" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <i data-lucide="building-2" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
+                                    <div class="text-xs font-bold text-gray-700">تمويل المشاريع</div>
+                                    <div class="text-[9px] text-gray-400 mt-0.5">قروض طويلة الأمد</div>
+                                </div>
+                                <div onclick="toggleProduct(this)" data-key="working-capital" data-label="رأس المال العامل" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <i data-lucide="refresh-cw" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
+                                    <div class="text-xs font-bold text-gray-700">رأس المال العامل</div>
+                                    <div class="text-[9px] text-gray-400 mt-0.5">تمويل التكاليف اليومية</div>
+                                </div>
+                                <div onclick="toggleProduct(this)" data-key="acquisition-finance" data-label="تمويل الاستحواذ" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <i data-lucide="handshake" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
+                                    <div class="text-xs font-bold text-gray-700">تمويل الاستحواذ</div>
+                                    <div class="text-[9px] text-gray-400 mt-0.5">شراء شركات أخرى</div>
+                                </div>
+                                <div onclick="toggleProduct(this)" data-key="supply-chain" data-label="سلسلة التوريد" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <i data-lucide="link" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
+                                    <div class="text-xs font-bold text-gray-700">سلسلة التوريد</div>
+                                    <div class="text-[9px] text-gray-400 mt-0.5">تحسين التدفق النقدي</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-gray-100"></div>
+
+                        <!-- 2. Specialized Programs -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="bg-[#002d5d] text-white text-[10px] font-bold px-2 py-0.5 rounded">2</span>
+                                <span class="text-[#002d5d] font-bold text-sm">البرامج المتخصصة</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div onclick="toggleProduct(this)" data-key="tanafusiya" data-label="تنافسية (4IR)" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <i data-lucide="cpu" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
+                                    <div class="text-xs font-bold text-gray-700">تنافسية (الجيل الرابع)</div>
+                                    <div class="text-[9px] text-gray-400 mt-0.5">الأتمتة والتصنيع الذكي</div>
+                                </div>
+                                <div onclick="toggleProduct(this)" data-key="renewable-energy" data-label="الطاقة المتجددة" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <i data-lucide="zap" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
+                                    <div class="text-xs font-bold text-gray-700">الطاقة المتجددة</div>
+                                    <div class="text-[9px] text-gray-400 mt-0.5">مشاريع الطاقة النظيفة</div>
+                                </div>
+                                <div onclick="toggleProduct(this)" data-key="local-content" data-label="المحتوى المحلي" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <i data-lucide="flag" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
+                                    <div class="text-xs font-bold text-gray-700">المحتوى المحلي</div>
+                                    <div class="text-[9px] text-gray-400 mt-0.5">استبدال الواردات</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-gray-100"></div>
+
+                        <!-- 3. Support Services -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="bg-[#002d5d] text-white text-[10px] font-bold px-2 py-0.5 rounded">3</span>
+                                <span class="text-[#002d5d] font-bold text-sm">خدمات الدعم</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div onclick="toggleProduct(this)" data-key="advisory" data-label="الاستشارات" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <i data-lucide="users" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
+                                    <div class="text-xs font-bold text-gray-700">الاستشارات</div>
+                                    <div class="text-[9px] text-gray-400 mt-0.5">استشارات فنية ومالية</div>
+                                </div>
+                                <div onclick="toggleProduct(this)" data-key="sme-support" data-label="دعم المنشآت الصغيرة" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <i data-lucide="store" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
+                                    <div class="text-xs font-bold text-gray-700">دعم المنشآت الصغيرة</div>
+                                    <div class="text-[9px] text-gray-400 mt-0.5">خطط سداد مرنة</div>
+                                </div>
+                                <div onclick="toggleProduct(this)" data-key="guarantees" data-label="الضمانات" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <i data-lucide="shield-check" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
+                                    <div class="text-xs font-bold text-gray-700">الضمانات</div>
+                                    <div class="text-[9px] text-gray-400 mt-0.5">ائتمان بنكي</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Selected pills -->
+                        <div id="selected-summary" style="display:none" class="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-100">
+                            <span class="text-xs text-gray-500 font-bold">المختار:</span>
+                            <div id="selected-pills" class="flex flex-wrap gap-1.5"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PATH A: FILE UPLOAD -->
+                <div id="path-upload">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                        <div class="p-4 px-6 border-b border-gray-100 flex items-center gap-2">
+                            <i data-lucide="upload-cloud" class="w-4 h-4 text-[#28a745]"></i>
+                            <span class="text-[#002d5d] font-bold text-sm">رفع ملف المشروع</span>
+                        </div>
+                        <div class="p-8">
+                            <div id="drop-zone" onclick="document.getElementById('file-input').click()"
+                                 ondragover="event.preventDefault();this.style.borderColor='#28a745';this.style.background='#f0fdf4'"
+                                 ondragleave="this.style.borderColor='#d1d5db';this.style.background=''"
+                                 ondrop="event.preventDefault();this.style.borderColor='#d1d5db';this.style.background='';handleFiles(event.dataTransfer.files)"
+                                 style="border:2px dashed #d1d5db;border-radius:12px;padding:48px;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer;transition:all 0.2s">
+                                <div style="background:#f0fdf4;padding:16px;border-radius:50%"><i data-lucide="cloud-upload" class="w-10 h-10 text-green-500"></i></div>
+                                <p class="text-sm text-gray-600 font-bold">اسحب الملفات هنا أو اضغط للاختيار</p>
+                                <p class="text-xs text-gray-400">PDF, DOC, DOCX — الحد الأقصى 25MB</p>
+                                <button class="bg-[#28a745] text-white px-6 py-2 rounded-lg text-xs font-bold flex items-center gap-2">
+                                    <i data-lucide="folder-open" class="w-4 h-4"></i> استعراض الملفات
+                                </button>
+                                <input type="file" id="file-input" class="hidden" accept=".pdf,.doc,.docx" multiple onchange="handleFiles(this.files)">
+                            </div>
+                            <div class="flex items-center gap-2 mt-4">
+                                <span class="text-[10px] text-gray-400 font-bold">الصيغ المقبولة:</span>
+                                <span class="bg-red-50 text-red-500 text-[10px] font-bold px-2 py-0.5 rounded">PDF</span>
+                                <span class="bg-blue-50 text-blue-500 text-[10px] font-bold px-2 py-0.5 rounded">DOC</span>
+                                <span class="bg-blue-50 text-blue-500 text-[10px] font-bold px-2 py-0.5 rounded">DOCX</span>
+                            </div>
+                            <div id="file-list" class="space-y-2 mt-4"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PATH B: TEMPLATE FORM + A4 PREVIEW -->
+                <div id="path-template" style="display:none">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                        <div class="p-4 px-6 border-b border-gray-100 flex items-center gap-2">
+                            <i data-lucide="file-edit" class="w-4 h-4 text-[#28a745]"></i>
+                            <span class="text-[#002d5d] font-bold text-sm">دراسة الجدوى</span>
+                        </div>
+                        <div class="p-6">
+                            <div style="display:flex;gap:24px;direction:rtl;align-items:flex-start">
+
+                                <!-- FORM (right side in RTL) -->
+                                <div style="flex:1;min-width:0">
+
+                                    <div class="mb-4">
+                                        <label class="block text-xs text-gray-500 font-bold mb-1">اسم المشروع <span class="text-red-500">*</span></label>
+                                        <input type="text" id="tmpl-name" oninput="updatePreview()" placeholder="أدخل اسم المشروع"
+                                               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-500 transition-colors" style="text-align:right">
+                                    </div>
+
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="mb-4">
+                                        <div>
+                                            <label class="block text-xs text-gray-500 font-bold mb-1">نوع المشروع</label>
+                                            <select id="tmpl-type" onchange="updatePreview()"
+                                                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-500 bg-white" style="text-align:right">
+                                                <option value="">اختر النوع</option>
+                                                <option>مشروع صناعي</option>
+                                                <option>مشروع زراعي</option>
+                                                <option>مشروع خدمي</option>
+                                                <option>مشروع تقني</option>
+                                                <option>مشروع طاقة</option>
+                                                <option>مشروع تعديني</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-500 font-bold mb-1">موقع المشروع</label>
+                                            <select id="tmpl-city" onchange="updatePreview()"
+                                                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-500 bg-white" style="text-align:right">
+                                                <option value="">اختر المدينة</option>
+                                                <option>الرياض</option><option>جدة</option><option>الدمام</option>
+                                                <option>مكة المكرمة</option><option>المدينة المنورة</option>
+                                                <option>تبوك</option><option>أبها</option><option>نجران</option>
+                                                <option>حائل</option><option>القصيم</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="mb-4">
+                                        <div>
+                                            <label class="block text-xs text-gray-500 font-bold mb-1">حجم الاستثمار</label>
+                                            <div class="flex border border-gray-200 rounded-lg overflow-hidden focus-within:border-green-500">
+                                                <input type="text" id="tmpl-investment" oninput="updatePreview()" placeholder="0,000,000"
+                                                       class="flex-1 px-3 py-2 text-sm outline-none" style="text-align:right">
+                                                <span class="bg-gray-50 px-2 text-[10px] text-gray-400 flex items-center border-r border-gray-100">ر.س</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-500 font-bold mb-1">الوظائف المتوقعة</label>
+                                            <div class="flex border border-gray-200 rounded-lg overflow-hidden focus-within:border-green-500">
+                                                <input type="number" id="tmpl-jobs" oninput="updatePreview()" placeholder="0" min="0"
+                                                       class="flex-1 px-3 py-2 text-sm outline-none" style="text-align:right">
+                                                <span class="bg-gray-50 px-2 text-[10px] text-gray-400 flex items-center border-r border-gray-100">وظيفة</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="block text-xs text-gray-500 font-bold mb-1">ملخص المشروع</label>
+                                        <textarea id="tmpl-summary" oninput="updatePreview()" rows="3" placeholder="اكتب ملخصاً عن المشروع..."
+                                                  class="w-full border border-gray-200 rounded-lg p-3 text-sm outline-none focus:border-green-500 resize-none" style="text-align:right"></textarea>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="block text-xs text-gray-500 font-bold mb-1">الأهداف والغايات</label>
+                                        <textarea id="tmpl-objectives" oninput="updatePreview()" rows="3" placeholder="حدد أهداف المشروع الرئيسية..."
+                                                  class="w-full border border-gray-200 rounded-lg p-3 text-sm outline-none focus:border-green-500 resize-none" style="text-align:right"></textarea>
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="block text-xs text-gray-500 font-bold mb-1">الوصف الفني</label>
+                                        <textarea id="tmpl-technical" oninput="updatePreview()" rows="3" placeholder="اشرح الجوانب الفنية للمشروع..."
+                                                  class="w-full border border-gray-200 rounded-lg p-3 text-sm outline-none focus:border-green-500 resize-none" style="text-align:right"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- LIVE PDF PREVIEW (left side in RTL) -->
+                                <div style="width:400px;min-width:400px;flex-shrink:0">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-[10px] text-gray-400 flex items-center gap-1">
+                                            <i data-lucide="file-text" class="w-3 h-3"></i> معاينة دراسة الجدوى (PDF)
+                                        </span>
+                                        <button onclick="window.print()" class="bg-[#002d5d] text-white px-3 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 hover:bg-[#001f42] transition-colors">
+                                            <i data-lucide="download" class="w-3 h-3"></i> تحميل PDF
+                                        </button>
+                                    </div>
+                                    <div style="background:#525659;padding:16px;border-radius:8px;height:600px;overflow-y:auto;box-shadow:0 2px 12px rgba(0,0,0,0.12)">
+                                        <div id="pdf-preview" style="background:#fff;padding:28px 24px;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3);font-family:'Cairo',sans-serif;direction:rtl;color:#1f2937;font-size:11px;line-height:1.6">
+
+                                            <!-- Header -->
+                                            <div style="text-align:center;border-bottom:2px solid #002d5d;padding-bottom:12px;margin-bottom:16px">
+                                                <div style="color:#002d5d;font-size:16px;font-weight:700">دراسة الجدوى</div>
+                                                <div style="color:#6b7280;font-size:9px;margin-top:4px">صندوق التنمية الصناعية السعودي</div>
+                                                <div style="color:#9ca3af;font-size:8px;margin-top:2px" id="prev-date">—</div>
+                                            </div>
+
+                                            <!-- Project Info -->
+                                            <div style="margin-bottom:14px">
+                                                <div style="color:#002d5d;font-weight:700;font-size:12px;border-right:3px solid #28a745;padding-right:6px;margin-bottom:8px">١. معلومات المشروع</div>
+                                                <table style="width:100%;font-size:10px;border-collapse:collapse">
+                                                    <tr><td style="padding:4px 0;color:#6b7280;width:90px">اسم المشروع:</td><td style="padding:4px 0;font-weight:700" id="prev-name">—</td></tr>
+                                                    <tr><td style="padding:4px 0;color:#6b7280">نوع المشروع:</td><td style="padding:4px 0;font-weight:700" id="prev-type">—</td></tr>
+                                                    <tr><td style="padding:4px 0;color:#6b7280">موقع المشروع:</td><td style="padding:4px 0;font-weight:700" id="prev-city">—</td></tr>
+                                                    <tr><td style="padding:4px 0;color:#6b7280">حجم الاستثمار:</td><td style="padding:4px 0;font-weight:700"><span id="prev-investment">—</span> <span style="color:#9ca3af;font-size:9px">ر.س</span></td></tr>
+                                                    <tr><td style="padding:4px 0;color:#6b7280">الوظائف المتوقعة:</td><td style="padding:4px 0;font-weight:700"><span id="prev-jobs">—</span> <span style="color:#9ca3af;font-size:9px">وظيفة</span></td></tr>
+                                                </table>
+                                            </div>
+
+                                            <!-- Summary -->
+                                            <div style="margin-bottom:14px">
+                                                <div style="color:#002d5d;font-weight:700;font-size:12px;border-right:3px solid #28a745;padding-right:6px;margin-bottom:6px">٢. ملخص المشروع</div>
+                                                <p id="prev-summary" style="font-size:10px;color:#9ca3af;text-align:justify;margin:0">لم يتم الإدخال بعد...</p>
+                                            </div>
+
+                                            <!-- Objectives -->
+                                            <div style="margin-bottom:14px">
+                                                <div style="color:#002d5d;font-weight:700;font-size:12px;border-right:3px solid #28a745;padding-right:6px;margin-bottom:6px">٣. الأهداف والغايات</div>
+                                                <p id="prev-objectives" style="font-size:10px;color:#9ca3af;text-align:justify;margin:0">لم يتم الإدخال بعد...</p>
+                                            </div>
+
+                                            <!-- Technical -->
+                                            <div style="margin-bottom:14px">
+                                                <div style="color:#002d5d;font-weight:700;font-size:12px;border-right:3px solid #28a745;padding-right:6px;margin-bottom:6px">٤. الوصف الفني</div>
+                                                <p id="prev-technical" style="font-size:10px;color:#9ca3af;text-align:justify;margin:0">لم يتم الإدخال بعد...</p>
+                                            </div>
+
+                                            <!-- Selected products -->
+                                            <div id="prev-products-wrap" style="display:none;margin-bottom:14px">
+                                                <div style="color:#002d5d;font-weight:700;font-size:12px;border-right:3px solid #28a745;padding-right:6px;margin-bottom:6px">٥. المنتجات والخدمات المطلوبة</div>
+                                                <div id="prev-products" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+                                            </div>
+
+                                            <!-- Footer -->
+                                            <div style="border-top:1px solid #e5e7eb;padding-top:8px;margin-top:20px;text-align:center;color:#9ca3af;font-size:8px">
+                                                وثيقة تم إنشاؤها تلقائياً — صفحة 1 من 1
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FOOTER NAVIGATION -->
+                <div class="flex justify-between items-center mt-6">
+                    <button onclick="switchStep(1)" class="bg-white border border-gray-200 text-gray-600 px-8 py-2 rounded-lg text-sm font-bold hover:bg-gray-50 flex items-center gap-2">
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i> السابق
+                    </button>
+                    <button onclick="switchStep(3)" class="bg-[#28a745] hover:bg-green-700 text-white px-8 py-2 rounded-lg text-sm font-bold shadow flex items-center gap-2">
+                        التالي <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+            </div>
+
+            <div id="step-3-content" class="hidden">
+
+                <!-- Section 1: Assets & Net Worth - Document Upload Only -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+                    <div class="p-4 px-6 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
+                        <h3 class="text-[#002d5d] font-bold text-sm">ملخص الأصول وصافي الثروة - التحقق بالمستندات</h3>
+                        <div class="flex items-center gap-2 text-[10px] text-gray-400">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i>
+                            <span>يجب ارفاق الاثبات لكل مستند</span>
+                        </div>
+                    </div>
+                    <div class="p-8">
+                        <div class="grid grid-cols-2 gap-6">
+                            
+                            <!-- صافي الثروة -->
+                            <div id="asset-networth" class="upload-card relative border-2 border-gray-200 rounded-xl p-5 transition-all hover:border-green-300 cursor-pointer" onclick="triggerUpload('networth')">
+                                <input type="file" id="upload-networth" class="hidden" accept=".pdf,.jpg,.jpeg,.png" onchange="handleAssetUpload('networth', this.files[0])">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="bg-green-50 p-3 rounded-lg">
+                                        <i data-lucide="banknote" class="w-6 h-6 text-green-600"></i>
+                                    </div>
+                                    <span class="text-[10px] px-2 py-1 bg-red-50 text-red-600 rounded font-bold">مطلوب</span>
+                                </div>
+                                <h4 class="text-[#002d5d] font-bold text-sm mb-1">صافي الثروة</h4>
+                                <p class="text-[10px] text-gray-400 mb-4">Net Worth Proof</p>
+                                <button class="w-full bg-[#28a745] hover:bg-green-700 text-white py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-colors">
+                                    <i data-lucide="upload" class="w-4 h-4"></i>
+                                   ارفاق الاثبات
+                                </button>
+                                <p class="text-[9px] text-gray-400 text-center mt-2">PDF, JPG, PNG - حتى 10MB</p>
+                                <div id="file-status-networth" class="hidden mt-3 pt-3 border-t border-gray-200">
+                                    <div class="flex items-center gap-2 text-green-600">
+                                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                        <span class="text-xs font-bold" id="filename-networth"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- عقارات -->
+                            <div id="asset-realestate" class="upload-card relative border-2 border-gray-200 rounded-xl p-5 transition-all hover:border-green-300 cursor-pointer" onclick="triggerUpload('realestate')">
+                                <input type="file" id="upload-realestate" class="hidden" accept=".pdf,.jpg,.jpeg,.png" onchange="handleAssetUpload('realestate', this.files[0])">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="bg-blue-50 p-3 rounded-lg">
+                                        <i data-lucide="home" class="w-6 h-6 text-blue-600"></i>
+                                    </div>
+                                    <span class="text-[10px] px-2 py-1 bg-gray-100 text-gray-500 rounded font-bold">اختياري</span>
+                                </div>
+                                <h4 class="text-[#002d5d] font-bold text-sm mb-1">عقارات</h4>
+                                <p class="text-[10px] text-gray-400 mb-4">Real Estate Proof</p>
+                                <button class="w-full bg-[#28a745] hover:bg-green-700 text-white py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-colors">
+                                    <i data-lucide="upload" class="w-4 h-4"></i>
+                                   ارفاق الاثبات
+                                </button>
+                                <p class="text-[9px] text-gray-400 text-center mt-2">PDF, JPG, PNG - حتى 10MB</p>
+                                <div id="file-status-realestate" class="hidden mt-3 pt-3 border-t border-gray-200">
+                                    <div class="flex items-center gap-2 text-green-600">
+                                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                        <span class="text-xs font-bold" id="filename-realestate"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- أسهم -->
+                            <div id="asset-stocks" class="upload-card relative border-2 border-gray-200 rounded-xl p-5 transition-all hover:border-green-300 cursor-pointer" onclick="triggerUpload('stocks')">
+                                <input type="file" id="upload-stocks" class="hidden" accept=".pdf,.jpg,.jpeg,.png" onchange="handleAssetUpload('stocks', this.files[0])">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="bg-orange-50 p-3 rounded-lg">
+                                        <i data-lucide="trending-up" class="w-6 h-6 text-orange-600"></i>
+                                    </div>
+                                    <span class="text-[10px] px-2 py-1 bg-gray-100 text-gray-500 rounded font-bold">اختياري</span>
+                                </div>
+                                <h4 class="text-[#002d5d] font-bold text-sm mb-1">أسهم</h4>
+                                <p class="text-[10px] text-gray-400 mb-4">Stocks Proof</p>
+                                <button class="w-full bg-[#28a745] hover:bg-green-700 text-white py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-colors">
+                                    <i data-lucide="upload" class="w-4 h-4"></i>
+                                   ارفاق الاثبات
+                                </button>
+                                <p class="text-[9px] text-gray-400 text-center mt-2">PDF, JPG, PNG - حتى 10MB</p>
+                                <div id="file-status-stocks" class="hidden mt-3 pt-3 border-t border-gray-200">
+                                    <div class="flex items-center gap-2 text-green-600">
+                                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                        <span class="text-xs font-bold" id="filename-stocks"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- رهن -->
+                            <div id="asset-mortgage" class="upload-card relative border-2 border-gray-200 rounded-xl p-5 transition-all hover:border-green-300 cursor-pointer" onclick="triggerUpload('mortgage')">
+                                <input type="file" id="upload-mortgage" class="hidden" accept=".pdf,.jpg,.jpeg,.png" onchange="handleAssetUpload('mortgage', this.files[0])">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="bg-red-50 p-3 rounded-lg">
+                                        <i data-lucide="shield-alert" class="w-6 h-6 text-red-500"></i>
+                                    </div>
+                                    <span class="text-[10px] px-2 py-1 bg-gray-100 text-gray-500 rounded font-bold">اختياري</span>
+                                </div>
+                                <h4 class="text-[#002d5d] font-bold text-sm mb-1">رهن</h4>
+                                <p class="text-[10px] text-gray-400 mb-4">Mortgage Proof</p>
+                                <button class="w-full bg-[#28a745] hover:bg-green-700 text-white py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-colors">
+                                    <i data-lucide="upload" class="w-4 h-4"></i>
+                                   ارفاق الاثبات
+                                </button>
+                                <p class="text-[9px] text-gray-400 text-center mt-2">PDF, JPG, PNG - حتى 10MB</p>
+                                <div id="file-status-mortgage" class="hidden mt-3 pt-3 border-t border-gray-200">
+                                    <div class="flex items-center gap-2 text-green-600">
+                                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                        <span class="text-xs font-bold" id="filename-mortgage"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Financial Statements Table -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+                    <div class="p-4 px-6 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
+                        <h3 class="text-[#002d5d] font-bold text-sm">القوائم المالية المدققة</h3>
+                        <button onclick="addFinancialYear()" class="bg-[#28a745] hover:bg-green-700 text-white px-4 py-1.5 rounded-md text-xs font-bold flex items-center gap-2 transition-colors">
+                            <i data-lucide="plus" class="w-3 h-3"></i>
+                            إضافة سنة مالية
+                        </button>
+                    </div>
+                    <div class="p-8">
+                        <div class="border border-gray-100 rounded-lg overflow-hidden">
+                            <table class="w-full text-right text-sm">
+                                <thead class="bg-[#eef5ed] text-gray-600">
+                                    <tr>
+                                        <th class="p-4 border-l border-white font-bold w-1/3">السنة المالية</th>
+                                        <th class="p-4 border-l border-white font-bold">إرفاق القوائم المدققة</th>
+                                        <th class="p-4 font-bold w-24">إجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="financial-years-tbody">
+                                    <tr class="bg-white border-b border-gray-50">
+                                        <td class="p-4 border-l border-gray-50">
+                                            <input type="text" placeholder="مثال: 2023" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-500 transition-colors text-right">
+                                        </td>
+                                        <td class="p-4 border-l border-gray-50">
+                                            <div class="flex items-center gap-3">
+                                                <button onclick="triggerFinancialUpload(this)" class="bg-[#002d5d] hover:bg-[#001f42] text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors">
+                                                    <i data-lucide="upload" class="w-4 h-4"></i>
+                                                    رفع الملف
+                                                </button>
+                                                <input type="file" class="hidden financial-upload" accept=".pdf" onchange="handleFinancialUpload(this)">
+                                                <span class="text-xs text-gray-400 file-name-display">لم يتم الرفع</span>
+                                            </div>
+                                        </td>
+                                        <td class="p-4 text-center">
+                                            <button onclick="removeFinancialRow(this)" class="text-red-500 hover:text-red-700 transition-colors">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4 bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-center gap-2 text-blue-700 text-xs">
+                            <i data-lucide="info" class="w-4 h-4 shrink-0"></i>
+                            <span>يرجى إرفاق القوائم المالية المدققة لآخر 3 سنوات على الأقل بصيغة PDF</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submission Footer -->
+                <div class="flex justify-between items-center">
+                    <button onclick="switchStep(2)" class="bg-white border border-gray-200 text-gray-600 px-8 py-2.5 rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors flex items-center gap-2">
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        السابق
+                    </button>
+                    <button id="submit-btn" onclick="validateAndSubmit()" class="bg-gray-300 text-gray-500 px-12 py-2.5 rounded-lg text-sm font-bold shadow-lg transition-all flex items-center gap-2 cursor-not-allowed" disabled>
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        تقديم الطلب
+                    </button>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Asset upload state tracking
+        const uploadedAssets = {
+            networth: false,
+            realestate: false,
+            stocks: false,
+            mortgage: false
+        };
+
+        // Trigger file upload
+        function triggerUpload(assetType) {
+            document.getElementById('upload-' + assetType).click();
+        }
+
+        // Handle asset file upload
+        function handleAssetUpload(assetType, file) {
+            if (!file) return;
+            
+            const card = document.getElementById('asset-' + assetType);
+            const status = document.getElementById('file-status-' + assetType);
+            const filename = document.getElementById('filename-' + assetType);
+            
+            // Update card style
+            card.classList.remove('border-gray-200');
+            card.classList.add('border-green-500', 'bg-green-50/30');
+            
+            // Show file status
+            status.classList.remove('hidden');
+            filename.textContent = file.name;
+            
+            // Mark as uploaded
+            uploadedAssets[assetType] = true;
+            
+            // Check if submit button should be enabled
+            checkSubmitButton();
+            
+            // Reinitialize icons
+            lucide.createIcons();
+        }
+
+        // Check if submit button should be enabled
+        function checkSubmitButton() {
+            const submitBtn = document.getElementById('submit-btn');
+            
+            // Enable only if Net Worth document is uploaded (required)
+            if (uploadedAssets.networth) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                submitBtn.classList.add('bg-[#28a745]', 'hover:bg-green-700', 'text-white', 'cursor-pointer');
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                submitBtn.classList.remove('bg-[#28a745]', 'hover:bg-green-700', 'text-white', 'cursor-pointer');
+            }
+        }
+
+        // Add financial year row
+        function addFinancialYear() {
+            const tbody = document.getElementById('financial-years-tbody');
+            const newRow = document.createElement('tr');
+            newRow.className = 'bg-white border-b border-gray-50';
+            newRow.innerHTML = `
+                <td class="p-4 border-l border-gray-50">
+                    <input type="text" placeholder="مثال: 2023" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-500 transition-colors text-right">
+                </td>
+                <td class="p-4 border-l border-gray-50">
+                    <div class="flex items-center gap-3">
+                        <button onclick="triggerFinancialUpload(this)" class="bg-[#002d5d] hover:bg-[#001f42] text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors">
+                            <i data-lucide="upload" class="w-4 h-4"></i>
+                            رفع الملف
+                        </button>
+                        <input type="file" class="hidden financial-upload" accept=".pdf" onchange="handleFinancialUpload(this)">
+                        <span class="text-xs text-gray-400 file-name-display">لم يتم الرفع</span>
+                    </div>
+                </td>
+                <td class="p-4 text-center">
+                    <button onclick="removeFinancialRow(this)" class="text-red-500 hover:text-red-700 transition-colors">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(newRow);
+            lucide.createIcons();
+        }
+
+        // Trigger financial statement upload
+        function triggerFinancialUpload(button) {
+            const row = button.closest('tr');
+            const fileInput = row.querySelector('.financial-upload');
+            fileInput.click();
+        }
+
+        // Handle financial statement upload
+        function handleFinancialUpload(input) {
+            if (!input.files || !input.files[0]) return;
+            
+            const file = input.files[0];
+            const row = input.closest('tr');
+            const display = row.querySelector('.file-name-display');
+            
+            display.textContent = file.name;
+            display.classList.remove('text-gray-400');
+            display.classList.add('text-green-600', 'font-bold');
+        }
+
+        // Remove financial year row
+        function removeFinancialRow(button) {
+            const tbody = document.getElementById('financial-years-tbody');
+            if (tbody.children.length > 1) {
+                button.closest('tr').remove();
+            } else {
+                alert('يجب الاحتفاظ بسنة مالية واحدة على الأقل');
+            }
+        }
+
+        // Validate and submit
+        function validateAndSubmit() {
+            if (!uploadedAssets.networth) {
+                alert('يرجى إرفاق مستند إثبات صافي الثروة (مطلوب)');
+                return;
+            }
+            
+            // Success message
+            alert('تم تقديم الطلب بنجاح!');
+            // Here you would normally submit the form
+        }
+
+        // Step 2: Path switching with badge toggle
+        function switchPath(path) {
+            const upload   = document.getElementById('path-upload');
+            const template = document.getElementById('path-template');
+            const optU     = document.getElementById('opt-upload');
+            const optT     = document.getElementById('opt-template');
+            const badgeU   = document.getElementById('badge-upload');
+            const badgeT   = document.getElementById('badge-template');
+
+            const activeCard   = 'relative bg-[#28a745] text-white p-5 rounded-xl flex items-center gap-4 cursor-pointer shadow-md transition-all duration-200 ring-2 ring-[#28a745] ring-offset-2';
+            const inactiveCard = 'relative bg-white border-2 border-gray-200 text-gray-500 p-5 rounded-xl flex items-center gap-4 cursor-pointer hover:border-green-300 transition-all duration-200';
+
+            if (path === 'upload') {
+                upload.classList.remove('hidden');
+                template.classList.add('hidden');
+                optU.className = activeCard;
+                optT.className = inactiveCard;
+                badgeU.classList.remove('hidden'); badgeU.classList.add('flex');
+                badgeT.classList.remove('flex');   badgeT.classList.add('hidden');
+            } else {
+                template.classList.remove('hidden');
+                upload.classList.add('hidden');
+                optT.className = activeCard;
+                optU.className = inactiveCard;
+                badgeT.classList.remove('hidden'); badgeT.classList.add('flex');
+                badgeU.classList.remove('flex');   badgeU.classList.add('hidden');
+                // Stamp today's date in the preview
+                document.getElementById('prev-date').textContent =
+                    new Date().toLocaleDateString('ar-SA-u-nu-latn', {year:'numeric', month:'long', day:'numeric'});
+            }
+            lucide.createIcons();
+        }
+
+        // File upload handling
+        function handleFiles(files) {
+            const list = document.getElementById('file-list');
+            Array.from(files).forEach(f => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between bg-gray-50 border border-gray-100 rounded-lg px-4 py-3';
+                const ext  = f.name.split('.').pop().toUpperCase();
+                const size = (f.size / 1024 / 1024).toFixed(2);
+                const extColor = ext === 'PDF' ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500';
+                row.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="${extColor} text-[10px] font-bold px-2 py-1 rounded">${ext}</div>
+                        <div>
+                            <div class="text-sm text-gray-700 font-bold">${f.name}</div>
+                            <div class="text-[10px] text-gray-400">${size} MB</div>
+                        </div>
+                    </div>
+                    <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-red-500 transition-colors p-1">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>`;
+                list.appendChild(row);
+            });
+        }
+
+        // ── Step 2 state ──────────────────────────────────────────────
+        var selectedProducts = {};
+
+        function toggleProduct(card) {
+            var key   = card.getAttribute('data-key');
+            var label = card.getAttribute('data-label');
+            var icon  = card.querySelector('i');
+            var active = !!selectedProducts[key];
+
+            if (active) {
+                delete selectedProducts[key];
+                card.style.borderColor  = '#e5e7eb';
+                card.style.background   = '';
+                if (icon) icon.style.color = '#9ca3af';
+                var badge = card.querySelector('.pcheck');
+                if (badge) badge.remove();
+            } else {
+                selectedProducts[key] = label;
+                card.style.borderColor  = '#28a745';
+                card.style.background   = '#f0fdf4';
+                if (icon) icon.style.color = '#28a745';
+                if (!card.querySelector('.pcheck')) {
+                    var b = document.createElement('span');
+                    b.className = 'pcheck';
+                    b.style.cssText = 'position:absolute;top:4px;left:4px;background:#28a745;color:#fff;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700';
+                    b.textContent = '✓';
+                    card.style.position = 'relative';
+                    card.appendChild(b);
+                }
+            }
+
+            var keys    = Object.keys(selectedProducts);
+            var summary = document.getElementById('selected-summary');
+            var pills   = document.getElementById('selected-pills');
+            if (keys.length) {
+                summary.style.display = 'flex';
+                pills.innerHTML = keys.map(function(k) {
+                    return '<span style="background:#002d5d;color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:999px">' + selectedProducts[k] + '</span>';
+                }).join('');
+            } else {
+                summary.style.display = 'none';
+                pills.innerHTML = '';
+            }
+            updatePreview();
+        }
+
+        function switchPath(path) {
+            var upload   = document.getElementById('path-upload');
+            var template = document.getElementById('path-template');
+            var optU     = document.getElementById('opt-upload');
+            var optT     = document.getElementById('opt-template');
+            var badgeU   = document.getElementById('badge-upload');
+            var badgeT   = document.getElementById('badge-template');
+
+            if (path === 'upload') {
+                upload.style.display    = '';
+                template.style.display  = 'none';
+                optU.style.background   = '#28a745';
+                optU.style.color        = '#fff';
+                optT.style.background   = '#fff';
+                optT.style.color        = '#6b7280';
+                badgeU.style.display    = 'flex';
+                badgeT.style.display    = 'none';
+            } else {
+                upload.style.display    = 'none';
+                template.style.display  = '';
+                optT.style.background   = '#28a745';
+                optT.style.color        = '#fff';
+                optU.style.background   = '#fff';
+                optU.style.color        = '#6b7280';
+                badgeT.style.display    = 'flex';
+                badgeU.style.display    = 'none';
+                document.getElementById('prev-date').textContent =
+                    new Date().toLocaleDateString('ar-SA-u-nu-latn', {year:'numeric', month:'long', day:'numeric'});
+            }
+            lucide.createIcons();
+        }
+
+        function handleFiles(files) {
+            var list = document.getElementById('file-list');
+            Array.from(files).forEach(function(f) {
+                var ext  = f.name.split('.').pop().toUpperCase();
+                var size = (f.size / 1024 / 1024).toFixed(2);
+                var row  = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border:1px solid #f3f4f6;border-radius:8px;padding:10px 14px;margin-bottom:6px';
+                row.innerHTML =
+                    '<div style="display:flex;align-items:center;gap:10px">' +
+                    '<span style="background:#fee2e2;color:#ef4444;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">' + ext + '</span>' +
+                    '<div><div style="font-size:13px;font-weight:700;color:#374151">' + f.name + '</div>' +
+                    '<div style="font-size:10px;color:#9ca3af">' + size + ' MB</div></div></div>' +
+                    '<button onclick="this.parentElement.remove()" style="color:#9ca3af;background:none;border:none;cursor:pointer;font-size:16px">&#x2715;</button>';
+                list.appendChild(row);
+            });
+        }
+
+        function updatePreview() {
+            var fields = ['name','investment','jobs'];
+            fields.forEach(function(f) {
+                var el   = document.getElementById('tmpl-' + f);
+                var prev = document.getElementById('prev-' + f);
+                if (!el || !prev) return;
+                var val = el.value.trim();
+                prev.textContent = val || '—';
+                prev.style.color = val ? '#002d5d' : '#9ca3af';
+            });
+
+            var typeEl = document.getElementById('tmpl-type');
+            var cityEl = document.getElementById('tmpl-city');
+            var pt = document.getElementById('prev-type');
+            var pc = document.getElementById('prev-city');
+            if (typeEl && pt) { pt.textContent = typeEl.value || '—'; pt.style.color = typeEl.value ? '#002d5d' : '#9ca3af'; }
+            if (cityEl && pc) { pc.textContent = cityEl.value || '—'; pc.style.color = cityEl.value ? '#002d5d' : '#9ca3af'; }
+
+            ['summary','objectives','technical'].forEach(function(f) {
+                var val  = document.getElementById('tmpl-' + f).value;
+                var prev = document.getElementById('prev-' + f);
+                prev.textContent = val || 'لم يتم الإدخال بعد...';
+                prev.style.color = val ? '#374151' : '#9ca3af';
+            });
+
+            var keys = Object.keys(selectedProducts);
+            var wrap = document.getElementById('prev-products-wrap');
+            var pp   = document.getElementById('prev-products');
+            if (keys.length) {
+                wrap.style.display = 'block';
+                pp.innerHTML = keys.map(function(k) {
+                    return '<span style="background:#002d5d;color:#fff;font-size:8.5px;font-weight:700;padding:2px 7px;border-radius:999px">' + selectedProducts[k] + '</span>';
+                }).join('');
+            } else {
+                wrap.style.display = 'none';
+                pp.innerHTML = '';
+            }
+        }
+
+        function simulateApiConnection() {
+            const btn = document.getElementById('api-sim-btn');
+            const btnText = document.getElementById('api-sim-btn-text');
+            const btnIcon = document.getElementById('api-sim-btn-icon');
+
+            if (btn.disabled) return;
+            btn.disabled = true;
+            btn.style.opacity = '0.75';
+            btn.style.cursor = 'wait';
+            btnText.textContent = 'جاري الاتصال...';
+            btnIcon.setAttribute('data-lucide', 'loader-2');
+            btnIcon.classList.add('animate-spin');
+            lucide.createIcons();
+
+            setTimeout(function () {
+                // Ministry: select وزارة التجارة
+                const trade = document.getElementById('api-ministry-trade');
+                trade.className = 'bg-[#28a745] text-white p-4 rounded-lg flex justify-between items-center cursor-pointer';
+                trade.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5"></i><div class="text-right font-bold text-xs">وزارة التجارة</div>';
+
+                // CR number + date
+                document.getElementById('api-cr-number').value = '4031287456';
+                document.getElementById('api-cr-date').value = '11/01/1447';
+
+                // Industrial license toggle ON
+                const toggle = document.getElementById('api-industrial-toggle');
+                if (toggle.classList.contains('bg-gray-300')) {
+                    toggle.classList.remove('bg-gray-300');
+                    toggle.classList.add('bg-green-500');
+                    const knob = toggle.querySelector('div');
+                    knob.classList.remove('translate-x-0');
+                    knob.classList.add('-translate-x-5');
+                }
+
+                // Authorized person row
+                document.getElementById('api-auth-row').innerHTML =
+                    '<td class="p-3 border-l border-gray-50">عبدالله السعيد</td>' +
+                    '<td class="p-3 border-l border-gray-50">هوية وطنية</td>' +
+                    '<td class="p-3 border-l border-gray-50">1098765432</td>' +
+                    '<td class="p-3 border-l border-gray-50">+966 50 000 0000</td>' +
+                    '<td class="p-3">a.alsaeed@example.com</td>';
+
+                // Commercial registry row
+                document.getElementById('api-cr-row').innerHTML =
+                    '<td class="p-3 border-l border-gray-50">شركة X</td>' +
+                    '<td class="p-3 border-l border-gray-50">4031287456</td>' +
+                    '<td class="p-3 border-l border-gray-50">الرياض</td>' +
+                    '<td class="p-3 border-l border-gray-50">11/01/1447</td>' +
+                    '<td class="p-3 border-l border-gray-50">500,000 ريال</td>' +
+                    '<td class="p-3"><div class="flex items-center gap-2">' +
+                    '<button class="text-[#002d5d] text-xs font-bold hover:underline">تعديل</button>' +
+                    '<i data-lucide="alert-circle" class="w-4 h-4 text-red-500"></i>' +
+                    '</div></td>';
+
+                // Owner row
+                document.getElementById('api-owner-row').innerHTML =
+                    '<td class="p-3 border-l border-gray-50">عبدالله السعيد</td>' +
+                    '<td class="p-3 border-l border-gray-50">100%</td>' +
+                    '<td class="p-3 border-l border-gray-50">المالك</td>' +
+                    '<td class="p-3">لا</td>';
+
+                // Button → success state
+                btn.classList.remove('bg-[#002d5d]');
+                btn.classList.add('bg-green-600');
+                btn.style.opacity = '1';
+                btn.style.cursor = 'default';
+                btnText.textContent = 'تم جلب البيانات بنجاح';
+                btnIcon.classList.remove('animate-spin');
+                btnIcon.setAttribute('data-lucide', 'check-circle');
+                lucide.createIcons();
+            }, 1200);
+        }
+
+        function toggleAccordion(id) {
+            const el = document.getElementById(id);
+            const icon = document.getElementById(id + '-icon');
+            el.classList.toggle('hidden');
+            if (icon) icon.style.transform = el.classList.contains('hidden') ? 'rotate(180deg)' : '';
+            lucide.createIcons();
+        }
+
+        function switchStep(step) {
+            const contents = [document.getElementById('step-1-content'), document.getElementById('step-2-content'), document.getElementById('step-3-content')];
+            const circles = [document.getElementById('step-circle-1'), document.getElementById('step-circle-2'), document.getElementById('step-circle-3')];
+            const texts = [document.getElementById('step-text-1'), document.getElementById('step-text-2'), document.getElementById('step-text-3')];
+
+            contents.forEach(c => c.classList.add('hidden'));
+            contents[step-1].classList.remove('hidden');
+
+            // إعادة تعيين الاستايلات
+            circles.forEach(c => c.className = "w-10 h-10 rounded-full border-2 border-green-500 bg-white flex items-center justify-center text-green-500 font-bold mb-2 transition-all");
+            texts.forEach(t => t.className = "text-[11px] text-gray-400 font-bold");
+
+            // تمييز الخطوة النشطة (برتقالي في الخطوة 3 كما في الصورة)
+            if (step === 3) {
+                circles[2].className = "w-10 h-10 rounded-full border-2 border-orange-400 bg-white flex items-center justify-center text-orange-400 font-bold mb-2 transition-all";
+                texts[2].className = "text-[11px] text-[#002d5d] font-bold";
+            } else if (step === 1) {
+                circles[0].className = "w-10 h-10 rounded-full border-2 border-orange-400 bg-white flex items-center justify-center text-orange-400 font-bold mb-2 transition-all";
+                texts[0].className = "text-[11px] text-[#002d5d] font-bold";
+            } else if (step === 2) {
+                circles[1].className = "w-10 h-10 rounded-full border-2 border-orange-400 bg-white flex items-center justify-center text-orange-400 font-bold mb-2 transition-all";
+                texts[1].className = "text-[11px] text-[#002d5d] font-bold";
+            }
+            
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIDF Dashboard - RTL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f8fafb;
+            /* نمط الخلفية الهندسي المتقاطع */
+            background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40 L40 80 L80 40 L40 0 Z' fill='none' stroke='%23e2e8f0' stroke-width='0.5'/%3E%3C/svg%3E");
+        }
+        .sidebar-active {
+            background-color: #f0fdf4;
+            color: #28a745;
+            border-right: 4px solid #28a745;
+        }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <aside class="w-28 bg-white border-l border-gray-200 flex flex-col items-center py-6 z-20 shadow-sm">
+        <div class="mb-10 text-center px-2">
+            <div class="flex justify-center mb-1">
+                <img src="images/SIDF_menu_logo.png" alt="SIDF Logo" class="w-12 h-12 object-contain cursor-pointer" onclick="window.location.href='page2.html'">
+            </div>
+            <span class="text-[10px] text-gray-400 font-sans block">v2.0.5</span>
+        </div>
+
+        <nav class="w-full flex flex-col">
+            <a href="#" class="sidebar-active flex flex-col items-center py-5 gap-2 text-[11px] font-bold">
+                <i data-lucide="layout-grid" class="w-6 h-6"></i>
+                لوحة المعلومات
+            </a>
+            <a href="#" class="flex flex-col items-center py-5 gap-2 text-[11px] text-gray-400 hover:bg-gray-50 transition-colors">
+                <i data-lucide="flag" class="w-6 h-6"></i>
+                تواصل معنا
+            </a>
+            <a href="#" class="flex flex-col items-center py-5 gap-2 text-[11px] text-gray-400 hover:bg-gray-50 transition-colors">
+                <i data-lucide="mail" class="w-6 h-6"></i>
+                الصندوق الوارد
+            </a>
+            <a href="#" class="flex flex-col items-center py-5 gap-2 text-[11px] text-gray-400 hover:bg-gray-50 transition-colors">
+                <i data-lucide="briefcase" class="w-6 h-6"></i>
+                المشاريع
+            </a>
+            <a href="#" class="flex flex-col items-center py-5 gap-2 text-[11px] text-gray-400 hover:bg-gray-50 transition-colors">
+                <i data-lucide="phone" class="w-6 h-6"></i>
+                إدارة الرد الآلي
+            </a>
+            <a href="#" class="flex flex-col items-center py-5 gap-2 text-[11px] text-gray-400 hover:bg-gray-50 transition-colors">
+                <i data-lucide="file-text" class="w-6 h-6"></i>
+                شهادة عدم الاقتراض
+            </a>
+        </nav>
+    </aside>
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+        
+        <header class="bg-white h-16 flex items-center justify-between px-8 border-b border-gray-100 shadow-sm z-10">
+            <div>
+                <h1 class="text-[#002d5d] font-bold text-lg">لوحة المعلومات</h1>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-1 text-gray-500 text-sm cursor-pointer hover:text-green-600 ml-4">
+                    <span>English</span>
+                    <i data-lucide="globe" class="w-4 h-4"></i>
+                </div>
+                
+                <button class="bg-[#28a745] hover:bg-green-700 text-white px-5 py-1.5 rounded-md flex items-center gap-2 text-sm font-bold transition-all" onclick="window.location.href='page3.html';">
+                    جديد
+                    <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                </button>
+
+                <div class="bg-gray-50 px-4 py-1.5 rounded-md flex items-center gap-6 text-sm text-gray-600 cursor-pointer border border-gray-100">
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                    <span>شركة X</span>
+                </div>
+
+                <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='main.html'">
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                    <div class="bg-[#28a745] rounded-full p-2 text-white shadow-md">
+                        <i data-lucide="user" class="w-5 h-5"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-10">
+            
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-[#002d5d] text-xl font-medium">مرحباً</h2>
+                <div class="flex items-center gap-2 text-[#002d5d] font-bold text-sm cursor-pointer hover:underline">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>دليل المستخدم</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <div class="bg-[#002d5d] rounded-lg p-6 text-white flex flex-col justify-between shadow-xl min-h-[180px]">
+                    <div class="flex justify-between items-start">
+                        <span class="text-sm font-semibold opacity-90">إجمالي القروض</span>
+                        <div class="bg-white/10 p-1.5 rounded">
+                            <i data-lucide="banknote" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                    <div class="text-6xl font-bold text-right my-4">0</div>
+                    <div class="flex gap-6 pt-4 border-t border-white/10">
+                        <div class="flex items-center gap-2">
+                            <span class="text-yellow-400 font-bold text-lg">0</span>
+                            <span class="text-xs opacity-80">مرفوض</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-lg">0</span>
+                            <span class="text-xs opacity-80">معتمد</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg border border-gray-100 p-6 flex flex-col justify-between shadow-sm min-h-[180px]">
+                    <div class="flex justify-between items-start">
+                        <div class="text-right">
+                            <p class="text-xs text-gray-400 mb-1">مبلغ القرض المطلوب</p>
+                            <span class="text-[10px] text-blue-400 font-bold px-2 py-0.5 bg-blue-50 rounded">معتمد</span>
+                        </div>
+                        <div class="bg-gray-50 p-1.5 rounded text-gray-400">
+                            <i data-lucide="banknote" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline justify-end gap-2 mt-auto">
+                        <span class="text-4xl font-bold text-gray-700">0</span>
+                        <span class="text-sm text-gray-400">ريال</span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg border border-gray-100 p-6 flex flex-col justify-between shadow-sm min-h-[180px]">
+                    <div class="flex justify-between items-start">
+                        <p class="text-xs text-gray-400 text-right">المبلغ المصروف المطلوب</p>
+                        <div class="bg-gray-50 p-1.5 rounded text-gray-400">
+                            <i data-lucide="banknote" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-baseline justify-end gap-2 mt-auto">
+                        <span class="text-4xl font-bold text-green-500">0</span>
+                        <span class="text-sm text-gray-400">ريال</span>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // تشغيل الأيقونات
+        lucide.createIcons();
+    </script>
+</body>
+</html>
