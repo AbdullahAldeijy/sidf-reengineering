@@ -23,7 +23,12 @@
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <aside class="w-28 bg-white border-l border-gray-200 flex flex-col items-center py-6 z-20 shadow-sm">
+    <button onclick="toggleSidebar()" class="md:hidden fixed top-3 right-3 z-50 bg-white border border-gray-200 rounded-lg p-2 shadow-md">
+        <i data-lucide="menu" class="w-5 h-5 text-[#002d5d]"></i>
+    </button>
+    <div id="sidebar-backdrop" onclick="toggleSidebar()" class="md:hidden fixed inset-0 bg-black/40 z-30 hidden"></div>
+
+    <aside id="sidebar" class="w-28 bg-white border-l border-gray-200 flex flex-col items-center py-6 shadow-sm fixed md:static right-0 top-0 h-full z-40 transform translate-x-full md:translate-x-0 transition-transform">
         <div class="mb-10 text-center px-2">
             <div class="flex justify-center mb-1">
                 <img src="images/SIDF_menu_logo.png" alt="SIDF Logo" class="w-12 h-12 object-contain cursor-pointer" onclick="window.location.href='page2.html'">
@@ -61,55 +66,55 @@
 
     <div class="flex-1 flex flex-col overflow-hidden">
 
-        <header class="bg-white h-16 flex items-center justify-between px-8 border-b border-gray-100 shadow-sm z-10">
-            <div>
-                <h1 class="text-[#002d5d] font-bold text-lg">طلب القرض</h1>
+        <header class="bg-white h-16 flex items-center justify-between px-4 md:px-8 border-b border-gray-100 shadow-sm z-10 gap-2">
+            <div class="min-w-0 pr-12 md:pr-0">
+                <h1 class="text-[#002d5d] font-bold text-base md:text-lg truncate">طلب القرض</h1>
             </div>
 
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-1 text-gray-500 text-sm cursor-pointer hover:text-green-600 ml-4">
+            <div class="flex items-center gap-2 md:gap-4 shrink-0">
+                <div class="hidden md:flex items-center gap-1 text-gray-500 text-sm cursor-pointer hover:text-green-600 ml-4">
                     <span>English</span>
                     <i data-lucide="globe" class="w-4 h-4"></i>
                 </div>
 
-                <button onclick="switchStep(1)" class="bg-[#28a745] hover:bg-green-700 text-white px-5 py-1.5 rounded-md flex items-center gap-2 text-sm font-bold transition-all">
+                <button onclick="switchStep(1)" class="bg-[#28a745] hover:bg-green-700 text-white px-3 md:px-5 py-1.5 rounded-md flex items-center gap-1 md:gap-2 text-xs md:text-sm font-bold transition-all">
                     جديد
-                    <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                    <i data-lucide="chevron-down" class="w-3 h-3 md:w-4 md:h-4"></i>
                 </button>
 
-                <div class="bg-gray-50 px-4 py-1.5 rounded-md flex items-center gap-6 text-sm text-gray-600 cursor-pointer border border-gray-100">
+                <div class="hidden md:flex bg-gray-50 px-4 py-1.5 rounded-md items-center gap-6 text-sm text-gray-600 cursor-pointer border border-gray-100">
                     <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
                     <span>شركة X</span>
                 </div>
 
                 <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='main.html'">
-                    <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
-                    <div class="bg-[#28a745] rounded-full p-2 text-white shadow-md">
-                        <i data-lucide="user" class="w-5 h-5"></i>
+                    <i data-lucide="chevron-down" class="hidden md:inline w-4 h-4 text-gray-400"></i>
+                    <div class="bg-[#28a745] rounded-full p-1.5 md:p-2 text-white shadow-md">
+                        <i data-lucide="user" class="w-4 h-4 md:w-5 md:h-5"></i>
                     </div>
                 </div>
             </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto p-6 scroll-smooth">
+        <main class="flex-1 overflow-y-auto p-3 md:p-6 scroll-smooth">
             
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-6">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-8 mb-6">
                 <div class="flex items-center relative">
-                    <div class="absolute top-5 right-0 left-0 flex px-24">
+                    <div class="absolute top-5 right-0 left-0 flex px-12 md:px-24">
                         <div id="line-1-2" class="h-[2px] bg-green-500 flex-1 transition-all duration-300"></div>
                         <div id="line-2-3" class="h-[2px] bg-green-500 flex-1 transition-all duration-300"></div>
                     </div>
 
                     <div onclick="switchStep(1)" class="flex flex-col items-center flex-1 z-10 cursor-pointer">
                         <div id="step-circle-1" class="w-10 h-10 rounded-full border-2 border-orange-400 bg-white flex items-center justify-center text-orange-400 font-bold mb-2">1</div>
-                        <span id="step-text-1" class="text-[11px] text-[#002d5d] font-bold">التحقق من معلومات المنشأة والملكية</span>
+                        <span id="step-text-1" class="text-[10px] md:text-[11px] text-[#002d5d] font-bold text-center px-1">التحقق من معلومات المنشأة والملكية</span>
                         <div class="w-12 h-1 bg-gray-100 rounded-full mt-1"><div id="progress-1" class="bg-orange-400 h-full w-0"></div></div>
                         <span class="text-[9px] text-gray-400">0%</span>
                     </div>
 
                     <div onclick="switchStep(2)" class="flex flex-col items-center flex-1 z-10 cursor-pointer">
                         <div id="step-circle-2" class="w-10 h-10 rounded-full border-2 border-green-500 bg-white flex items-center justify-center text-green-500 font-bold mb-2">2</div>
-                        <span id="step-text-2" class="text-[11px] text-gray-400 font-bold">معلومات المشروع</span>
+                        <span id="step-text-2" class="text-[10px] md:text-[11px] text-gray-400 font-bold text-center px-1">معلومات المشروع</span>
                         <div class="w-12 h-1 bg-gray-100 rounded-full mt-1 overflow-hidden">
                             <div id="progress-2" class="bg-green-500 h-full w-0"></div>
                         </div>
@@ -118,7 +123,7 @@
 
                     <div onclick="switchStep(3)" class="flex flex-col items-center flex-1 z-10 cursor-pointer">
                         <div id="step-circle-3" class="w-10 h-10 rounded-full border-2 border-green-500 bg-white flex items-center justify-center text-green-500 font-bold mb-2">3</div>
-                        <span id="step-text-3" class="text-[11px] text-gray-400 font-bold">المعلومات المالية</span>
+                        <span id="step-text-3" class="text-[10px] md:text-[11px] text-gray-400 font-bold text-center px-1">المعلومات المالية</span>
                         <div class="w-12 h-1 bg-gray-100 rounded-full mt-1 overflow-hidden">
                             <div id="progress-3" class="bg-green-500 h-full w-0"></div>
                         </div>
@@ -153,7 +158,7 @@
                         <i data-lucide="chevron-up" class="w-4 h-4 text-gray-300 transition-transform" id="acc-license-icon"></i>
                     </div>
                     <div id="acc-license" class="p-8">
-                        <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                             <div id="api-ministry-trade" class="border border-gray-200 p-4 rounded-lg flex justify-between items-center text-gray-400 text-xs cursor-pointer hover:border-green-300 transition-colors">
                                 <div class="w-5 h-5 rounded-full border-2 border-gray-300"></div>
                                 <div class="text-right font-bold">وزارة التجارة</div>
@@ -163,7 +168,7 @@
                                 <div class="text-right font-bold">وزارة الاستثمار</div>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                             <div class="relative">
                                 <label class="block text-[11px] text-gray-400 mb-2">رقم السجل التجاري</label>
                                 <div class="flex items-center border-b-2 border-gray-200 focus-within:border-green-500 transition-colors">
@@ -295,7 +300,7 @@
             <div id="step-2-content" class="hidden">
 
                 <!-- PATH SELECTOR -->
-                <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                     <div id="opt-upload" onclick="switchPath('upload')" class="relative bg-[#28a745] text-white p-5 rounded-xl flex items-center gap-4 cursor-pointer shadow-md transition-all">
                         <div class="bg-white/20 p-3 rounded-lg shrink-0"><i data-lucide="upload-cloud" class="w-7 h-7"></i></div>
                         <div>
@@ -455,7 +460,7 @@
                             <span class="text-[#002d5d] font-bold text-sm">دراسة الجدوى</span>
                         </div>
                         <div class="p-6">
-                            <div style="display:flex;gap:24px;direction:rtl;align-items:flex-start">
+                            <div class="flex flex-col lg:flex-row gap-6 lg:gap-6 items-stretch lg:items-start" style="direction:rtl">
 
                                 <!-- FORM (right side in RTL) -->
                                 <div style="flex:1;min-width:0">
@@ -532,7 +537,7 @@
                                 </div>
 
                                 <!-- LIVE PDF PREVIEW (left side in RTL) -->
-                                <div style="width:400px;min-width:400px;flex-shrink:0">
+                                <div class="w-full lg:w-[400px] lg:min-w-[400px] lg:shrink-0">
                                     <div class="flex items-center justify-between mb-2">
                                         <span class="text-[10px] text-gray-400 flex items-center gap-1">
                                             <i data-lucide="file-text" class="w-3 h-3"></i> معاينة دراسة الجدوى (PDF)
@@ -623,9 +628,9 @@
                             <span>يجب ارفاق الاثبات لكل مستند</span>
                         </div>
                     </div>
-                    <div class="p-8">
-                        <div class="grid grid-cols-2 gap-6">
-                            
+                    <div class="p-4 md:p-8">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+
                             <!-- صافي الثروة -->
                             <div id="asset-networth" class="upload-card relative border-2 border-gray-200 rounded-xl p-5 transition-all hover:border-green-300 cursor-pointer" onclick="triggerUpload('networth')">
                                 <input type="file" id="upload-networth" class="hidden" accept=".pdf,.jpg,.jpeg,.png" onchange="handleAssetUpload('networth', this.files[0])">
@@ -1184,6 +1189,11 @@
                 btnIcon.setAttribute('data-lucide', 'check-circle');
                 lucide.createIcons();
             }, 1200);
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('translate-x-full');
+            document.getElementById('sidebar-backdrop').classList.toggle('hidden');
         }
 
         function toggleAccordion(id) {
