@@ -6,7 +6,7 @@ A front-end re-engineering prototype for the **Saudi Industrial Development Fund
 
 | File | Purpose |
 | --- | --- |
-| `main.html` | Landing / login screen |
+| `index.html` | Landing / login screen |
 | `page2.html` | Project overview |
 | `page3.html` | Loan-request multi-step form (license details, feasibility study, financials) with API connection simulator and live PDF preview |
 | `admin.html` | Admin dashboard — KPI cards (new orders, active requests, pending approvals, API match rate) and order-detail table with live search |
@@ -33,7 +33,7 @@ A front-end re-engineering prototype for the **Saudi Industrial Development Fund
 Open any `.html` file directly in a modern browser:
 
 ```
-start main.html
+start index.html
 ```
 
 Or serve the folder with any static server:
@@ -42,7 +42,7 @@ Or serve the folder with any static server:
 python -m http.server 8000
 ```
 
-Then visit `http://localhost:8000/main.html`.
+Then visit `http://localhost:8000/`.
 
 ## Notes
 
