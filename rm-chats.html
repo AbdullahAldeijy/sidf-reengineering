@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المحادثات (RM) - SIDF</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f7f9fb;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 30 L15 45 L30 30 L45 15 L60 30' fill='none' stroke='%23e5e7eb' stroke-width='0.5'/%3E%3C/svg%3E");
+        }
+        .active-sidebar-item {
+            color: #28a745;
+            background-color: #f0fdf4;
+            border-right: 4px solid #28a745;
+        }
+        .scroll-hide::-webkit-scrollbar { display: none; }
+
+        .order-pick { cursor: pointer; transition: all 0.2s; }
+        .order-pick:hover { background:#f9fafb; }
+        .order-pick.active { background:#f0fdf4; box-shadow: inset 4px 0 0 #28a745; }
+
+        .chat-bubble-team { background:#dbeafe; color:#1e3a8a; border-radius:14px 14px 14px 4px; }
+        .chat-bubble-client { background:#dcfce7; color:#14532d; border-radius:14px 14px 14px 4px; }
+        .chat-bubble-me { background:#002d5d; color:#fff; border-radius:14px 14px 4px 14px; }
+
+        .chat-messages { scroll-behavior: smooth; }
+        .chat-messages::-webkit-scrollbar { width: 5px; }
+        .chat-messages::-webkit-scrollbar-thumb { background:#e5e7eb; border-radius: 4px; }
+
+        /* Chat tabs (mobile) */
+        .chat-tab-btn.active { background:#002d5d; color:#fff; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-right">
+
+    <button onclick="toggleSidebar()" class="md:hidden fixed top-3 right-3 z-50 bg-white border border-gray-200 rounded-lg p-2 shadow-md">
+        <i data-lucide="menu" class="w-5 h-5 text-[#002d5d]"></i>
+    </button>
+    <div id="sidebar-backdrop" onclick="toggleSidebar()" class="md:hidden fixed inset-0 bg-black/40 z-30 hidden"></div>
+
+    <aside id="sidebar" class="w-24 bg-white border-l border-gray-200 flex flex-col items-center py-6 shrink-0 shadow-sm fixed md:static right-0 top-0 h-full z-40 transform translate-x-full md:translate-x-0 transition-transform">
+        <div class="mb-10 text-center">
+            <img src="images/SIDF_menu_logo.png" alt="Logo" class="w-12 h-12 object-contain mb-1 cursor-pointer" onclick="window.location.href='rm.html'">
+            <span class="text-[10px] text-gray-300 font-sans block">v2.0.5</span>
+        </div>
+
+        <nav class="w-full flex flex-col gap-1">
+            <a href="rm.html" class="flex flex-col items-center py-4 gap-1 text-[11px] text-gray-400 hover:bg-gray-50 transition-all">
+                <i data-lucide="layout-dashboard" class="w-6 h-6"></i>
+                <span>الرئيسية</span>
+            </a>
+            <a href="rm-workload.html" class="flex flex-col items-center py-4 gap-1 text-[11px] text-gray-400 hover:bg-gray-50 transition-all">
+                <i data-lucide="split" class="w-6 h-6"></i>
+                <span>التوزيع</span>
+            </a>
+            <a href="rm-chats.html" class="active-sidebar-item flex flex-col items-center py-4 gap-1 text-[11px] font-bold">
+                <i data-lucide="messages-square" class="w-6 h-6"></i>
+                <span>المحادثات</span>
+            </a>
+            <a href="index.html" class="flex flex-col items-center py-4 mt-10 gap-1 text-[11px] text-red-300 hover:text-red-500 transition-all">
+                <i data-lucide="log-out" class="w-6 h-6"></i>
+                <span>خروج</span>
+            </a>
+        </nav>
+    </aside>
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+
+        <header class="bg-white h-16 border-b border-gray-100 flex items-center justify-between px-4 md:px-8 z-10 shadow-sm gap-2">
+            <div class="flex items-center gap-2 md:gap-4 min-w-0 pr-12 md:pr-0">
+                <h1 class="text-[#002d5d] font-bold text-base md:text-lg truncate">المحادثات</h1>
+                <span class="hidden md:inline text-xs text-gray-400 bg-gray-50 px-3 py-1 rounded-full">فريق المشروع والعميل</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="bg-green-600 rounded-full p-2 text-white shadow-sm"><i data-lucide="user-cog" class="w-5 h-5"></i></div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-hidden p-4 md:p-6">
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
+
+                <!-- Orders Picker -->
+                <div class="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden max-h-[40vh] lg:max-h-full">
+                    <div class="p-3 border-b border-gray-100 flex items-center justify-between">
+                        <h3 class="text-[#002d5d] font-bold text-sm flex items-center gap-2">
+                            <i data-lucide="inbox" class="w-4 h-4 text-orange-500"></i>
+                            الطلبات الواردة
+                        </h3>
+                        <span id="orders-count" class="text-[10px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-bold">0</span>
+                    </div>
+                    <div class="p-2 border-b border-gray-100">
+                        <div class="relative">
+                            <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2"></i>
+                            <input id="orders-search" type="text" oninput="filterOrders()" placeholder="ابحث برقم أو اسم..."
+                                   class="w-full bg-gray-50 border border-gray-200 rounded-lg pr-8 pl-2 py-1.5 text-[11px] outline-none focus:border-green-500 focus:bg-white transition-all text-right">
+                        </div>
+                    </div>
+                    <div id="orders-list" class="flex-1 overflow-y-auto scroll-hide"></div>
+                </div>
+
+                <!-- Chats -->
+                <div class="lg:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-4 min-h-0">
+
+                    <!-- Mobile tab switcher (visible <md) -->
+                    <div class="md:hidden flex gap-1 bg-gray-100 rounded-lg p-1">
+                        <button id="tab-team" class="chat-tab-btn active flex-1 py-2 text-[11px] font-bold rounded-md transition-all">فريق المشروع</button>
+                        <button id="tab-client" class="chat-tab-btn flex-1 py-2 text-[11px] font-bold rounded-md transition-all">العميل</button>
+                    </div>
+
+                    <!-- Team Chat -->
+                    <div id="panel-team" class="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden min-h-[55vh] md:min-h-0">
+                        <div class="p-3 border-b border-gray-100 flex items-center gap-2 bg-blue-50/40">
+                            <div class="bg-blue-500 p-1.5 rounded-lg shrink-0"><i data-lucide="users" class="w-4 h-4 text-white"></i></div>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-bold text-[#002d5d]">محادثة فريق المشروع</h4>
+                                <p id="team-context" class="text-[9px] text-gray-400 truncate">لا يوجد طلب محدد</p>
+                            </div>
+                        </div>
+                        <div id="team-messages" class="chat-messages flex-1 overflow-y-auto p-3 space-y-2"></div>
+                        <div class="p-2 border-t border-gray-100 flex items-center gap-2">
+                            <input id="team-input" type="text" placeholder="اكتب رسالة للفريق..."
+                                   class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-[11px] outline-none focus:border-blue-400 focus:bg-white transition-all">
+                            <button onclick="sendMessage('team')" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-all shrink-0">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Client Chat -->
+                    <div id="panel-client" class="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden hidden md:flex min-h-[55vh] md:min-h-0">
+                        <div class="p-3 border-b border-gray-100 flex items-center gap-2 bg-green-50/40">
+                            <div class="bg-green-500 p-1.5 rounded-lg shrink-0"><i data-lucide="user-round" class="w-4 h-4 text-white"></i></div>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-bold text-[#002d5d]">محادثة العميل</h4>
+                                <p id="client-context" class="text-[9px] text-gray-400 truncate">لا يوجد طلب محدد</p>
+                            </div>
+                        </div>
+                        <div id="client-messages" class="chat-messages flex-1 overflow-y-auto p-3 space-y-2"></div>
+                        <div class="p-2 border-t border-gray-100 flex items-center gap-2">
+                            <input id="client-input" type="text" placeholder="اكتب رسالة للعميل..."
+                                   class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-[11px] outline-none focus:border-green-400 focus:bg-white transition-all">
+                            <button onclick="sendMessage('client')" class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition-all shrink-0">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('translate-x-full');
+            document.getElementById('sidebar-backdrop').classList.toggle('hidden');
+        }
+
+        const orders = [
+            { id: 'RQ-2024-321', name: 'منشأة الطاقة الجديدة' },
+            { id: 'RQ-2024-772', name: 'شركة الغاز الوطنية' },
+            { id: 'RQ-2024-815', name: 'مجموعة البتروكيماويات' },
+            { id: 'RQ-2024-901', name: 'شركة التقنية الحديثة' },
+            { id: 'RQ-2024-944', name: 'شركة الطاقة المستدامة' }
+        ];
+
+        const chats = {
+            'RQ-2024-321': {
+                team: [
+                    { from: 'سارة (PSD)', side: 'them', text: 'بدأنا الدراسة الفنية، نحتاج ملف MRD اليوم' },
+                    { from: 'أنا', side: 'me', text: 'تم رفعه قبل قليل، شيك الملفات' }
+                ],
+                client: [
+                    { from: 'العميل', side: 'them', text: 'متى أتوقع التحديث القادم؟' },
+                    { from: 'أنا', side: 'me', text: 'سيتم خلال 48 ساعة بعد اكتمال الدراسة الفنية' }
+                ]
+            },
+            'RQ-2024-772': {
+                team: [{ from: 'فهد (PSD)', side: 'them', text: 'الدراسة الفنية قيد المراجعة النهائية' }],
+                client: [{ from: 'العميل', side: 'them', text: 'شكراً على المتابعة' }]
+            },
+            'RQ-2024-815': {
+                team: [{ from: 'خالد (MSD)', side: 'them', text: 'سننتظر FTR و FMR قبل بدء تقييم المخاطر' }],
+                client: []
+            },
+            'RQ-2024-901': {
+                team: [{ from: 'ريم (MSD)', side: 'them', text: 'تم اعتماد جميع الملفات' }],
+                client: [{ from: 'العميل', side: 'them', text: 'ممتاز، شكراً لكم' }]
+            },
+            'RQ-2024-944': { team: [], client: [] }
+        };
+
+        let activeOrderId = null;
+
+        function renderOrders() {
+            const list = document.getElementById('orders-list');
+            document.getElementById('orders-count').textContent = orders.length;
+            list.innerHTML = orders.map(o => {
+                const last = (chats[o.id]?.team?.slice(-1)[0]?.text) || (chats[o.id]?.client?.slice(-1)[0]?.text) || 'لا توجد رسائل';
+                return `
+                    <div class="order-pick border-b border-gray-50 p-3" data-id="${o.id}" onclick="selectOrder('${o.id}')">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[11px] font-bold text-[#002d5d]">${o.id}</span>
+                            <i data-lucide="message-square" class="w-3 h-3 text-gray-300"></i>
+                        </div>
+                        <p class="text-[10px] text-gray-600 font-bold truncate">${o.name}</p>
+                        <p class="text-[9px] text-gray-400 truncate mt-0.5">${last}</p>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function selectOrder(id) {
+            activeOrderId = id;
+            document.querySelectorAll('.order-pick').forEach(r => r.classList.toggle('active', r.dataset.id === id));
+            const o = orders.find(x => x.id === id);
+            document.getElementById('team-context').textContent = `${id} · ${o.name}`;
+            document.getElementById('client-context').textContent = `${id} · ${o.name}`;
+            renderChat('team');
+            renderChat('client');
+        }
+
+        function renderChat(kind) {
+            const wrap = document.getElementById(`${kind}-messages`);
+            if (!activeOrderId) {
+                wrap.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-gray-300 text-[11px] gap-2">
+                    <i data-lucide="message-circle-off" class="w-8 h-8"></i>
+                    <span>اختر طلباً من القائمة</span>
+                </div>`;
+                lucide.createIcons();
+                return;
+            }
+            const msgs = (chats[activeOrderId] && chats[activeOrderId][kind]) || [];
+            const bubbleClass = kind === 'team' ? 'chat-bubble-team' : 'chat-bubble-client';
+            wrap.innerHTML = msgs.length === 0
+                ? `<div class="h-full flex items-center justify-center text-gray-300 text-[11px]">لا توجد رسائل بعد</div>`
+                : msgs.map(m => `
+                    <div class="flex ${m.side === 'me' ? 'justify-start' : 'justify-end'}">
+                        <div class="max-w-[80%]">
+                            <div class="text-[8px] text-gray-400 mb-0.5">${m.from}</div>
+                            <div class="${m.side === 'me' ? 'chat-bubble-me' : bubbleClass} px-3 py-2 text-[11px] leading-relaxed">${m.text}</div>
+                        </div>
+                    </div>
+                `).join('');
+            wrap.scrollTop = wrap.scrollHeight;
+        }
+
+        function sendMessage(kind) {
+            if (!activeOrderId) { alert('اختر طلباً أولاً'); return; }
+            const input = document.getElementById(`${kind}-input`);
+            const text = input.value.trim();
+            if (!text) return;
+            chats[activeOrderId] = chats[activeOrderId] || { team: [], client: [] };
+            chats[activeOrderId][kind].push({ from: 'أنا', side: 'me', text });
+            input.value = '';
+            renderChat(kind);
+        }
+
+        function filterOrders() {
+            const q = document.getElementById('orders-search').value.trim().toLowerCase();
+            document.querySelectorAll('.order-pick').forEach(r => {
+                r.style.display = !q || r.textContent.toLowerCase().includes(q) ? '' : 'none';
+            });
+        }
+
+        ['team', 'client'].forEach(k => {
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && document.activeElement && document.activeElement.id === `${k}-input`) {
+                    sendMessage(k);
+                }
+            });
+        });
+
+        // Mobile tabs
+        function setActiveTab(kind) {
+            document.getElementById('tab-team').classList.toggle('active', kind === 'team');
+            document.getElementById('tab-client').classList.toggle('active', kind === 'client');
+            document.getElementById('panel-team').classList.toggle('hidden', kind !== 'team');
+            document.getElementById('panel-client').classList.toggle('hidden', kind !== 'client');
+            // Restore md+ flex behavior
+            if (window.innerWidth >= 768) {
+                document.getElementById('panel-team').classList.remove('hidden');
+                document.getElementById('panel-client').classList.remove('hidden');
+            }
+        }
+        document.getElementById('tab-team').addEventListener('click', () => setActiveTab('team'));
+        document.getElementById('tab-client').addEventListener('click', () => setActiveTab('client'));
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) {
+                document.getElementById('panel-team').classList.remove('hidden');
+                document.getElementById('panel-client').classList.remove('hidden');
+            } else {
+                const teamActive = document.getElementById('tab-team').classList.contains('active');
+                document.getElementById('panel-team').classList.toggle('hidden', !teamActive);
+                document.getElementById('panel-client').classList.toggle('hidden', teamActive);
+            }
+        });
+
+        renderOrders();
+        renderChat('team');
+        renderChat('client');
+
+        // Auto-select if ?order= param provided
+        const params = new URLSearchParams(location.search);
+        const initial = params.get('order');
+        if (initial && orders.find(o => o.id === initial)) {
+            selectOrder(initial);
+        } else if (orders.length) {
+            selectOrder(orders[0].id);
+        }
+    </script>
+</body>
+</html>

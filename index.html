@@ -525,10 +525,17 @@
 
                 <div class="input-group">
                     <label>رقم بطاقة الأحوال / الإقامة</label>
-                    <input type="text" placeholder="ادخل رقم الهوية / الإقامة">
+                    <input id="login-id" type="text" placeholder="ادخل رقم الهوية / الإقامة">
                 </div>
 
-                <button class="login-btn" onclick="window.location.href='page2.html'">تسجيل الدخول</button>
+                <button class="login-btn" onclick="handleLogin()">تسجيل الدخول</button>
+
+                <script>
+                    function handleLogin() {
+                        const v = (document.getElementById('login-id').value || '').trim().toUpperCase();
+                        window.location.href = v === 'RM' ? 'rm.html' : 'page2.html';
+                    }
+                </script>
 
                 <a class="nafath-link">تحميل تطبيق نفاذ اضغط هنا</a>
 

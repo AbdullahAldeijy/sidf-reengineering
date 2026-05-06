@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>توزيع ملفات المجموعات (RM) - SIDF</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f7f9fb;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 30 L15 45 L30 30 L45 15 L60 30' fill='none' stroke='%23e5e7eb' stroke-width='0.5'/%3E%3C/svg%3E");
+        }
+        .active-sidebar-item {
+            color: #28a745;
+            background-color: #f0fdf4;
+            border-right: 4px solid #28a745;
+        }
+        .scroll-hide::-webkit-scrollbar { display: none; }
+
+        .order-card, .file-card {
+            cursor: grab;
+            transition: all 0.25s;
+        }
+        .order-card:active, .file-card:active { cursor: grabbing; opacity: 0.7; }
+        .dragging { opacity: 0.5; transform: rotate(1deg); }
+
+        .file-mrd { background:#dbeafe; color:#1e40af; border-color:#93c5fd; }
+        .file-ftr { background:#fed7aa; color:#9a3412; border-color:#fdba74; }
+        .file-fmr { background:#dcfce7; color:#166534; border-color:#86efac; }
+
+        .group-zone { transition: all 0.25s; }
+        .group-zone.drag-over { background-color:#f0fdf4; border-color:#28a745; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-right">
+
+    <button onclick="toggleSidebar()" class="md:hidden fixed top-3 right-3 z-50 bg-white border border-gray-200 rounded-lg p-2 shadow-md">
+        <i data-lucide="menu" class="w-5 h-5 text-[#002d5d]"></i>
+    </button>
+    <div id="sidebar-backdrop" onclick="toggleSidebar()" class="md:hidden fixed inset-0 bg-black/40 z-30 hidden"></div>
+
+    <aside id="sidebar" class="w-24 bg-white border-l border-gray-200 flex flex-col items-center py-6 shrink-0 shadow-sm fixed md:static right-0 top-0 h-full z-40 transform translate-x-full md:translate-x-0 transition-transform">
+        <div class="mb-10 text-center">
+            <img src="images/SIDF_menu_logo.png" alt="Logo" class="w-12 h-12 object-contain mb-1 cursor-pointer" onclick="window.location.href='rm.html'">
+            <span class="text-[10px] text-gray-300 font-sans block">v2.0.5</span>
+        </div>
+
+        <nav class="w-full flex flex-col gap-1">
+            <a href="rm.html" class="flex flex-col items-center py-4 gap-1 text-[11px] text-gray-400 hover:bg-gray-50 transition-all">
+                <i data-lucide="layout-dashboard" class="w-6 h-6"></i>
+                <span>الرئيسية</span>
+            </a>
+            <a href="rm-workload.html" class="active-sidebar-item flex flex-col items-center py-4 gap-1 text-[11px] font-bold">
+                <i data-lucide="split" class="w-6 h-6"></i>
+                <span>التوزيع</span>
+            </a>
+            <a href="rm-chats.html" class="flex flex-col items-center py-4 gap-1 text-[11px] text-gray-400 hover:bg-gray-50 transition-all">
+                <i data-lucide="messages-square" class="w-6 h-6"></i>
+                <span>المحادثات</span>
+            </a>
+            <a href="index.html" class="flex flex-col items-center py-4 mt-10 gap-1 text-[11px] text-red-300 hover:text-red-500 transition-all">
+                <i data-lucide="log-out" class="w-6 h-6"></i>
+                <span>خروج</span>
+            </a>
+        </nav>
+    </aside>
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+
+        <header class="bg-white h-16 border-b border-gray-100 flex items-center justify-between px-4 md:px-8 z-10 shadow-sm gap-2">
+            <div class="flex items-center gap-2 md:gap-4 min-w-0 pr-12 md:pr-0">
+                <h1 class="text-[#002d5d] font-bold text-base md:text-lg truncate">توزيع ملفات المجموعات</h1>
+                <span class="hidden md:inline text-xs text-gray-400 bg-gray-50 px-3 py-1 rounded-full">اسحب الملفات على المجموعة</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="bg-green-600 rounded-full p-2 text-white shadow-sm"><i data-lucide="user-cog" class="w-5 h-5"></i></div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scroll-hide">
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+                <!-- Column 1: Incoming Requests -->
+                <div class="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-[#002d5d] font-bold text-sm flex items-center gap-2">
+                            <i data-lucide="inbox" class="w-4 h-4 text-orange-500"></i>
+                            الطلبات الواردة
+                        </h3>
+                        <span id="orders-count" class="text-[10px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-bold">0</span>
+                    </div>
+                    <div id="orders-pool" class="flex flex-col gap-2 overflow-y-auto pr-1 scroll-hide" style="max-height:75vh"></div>
+                </div>
+
+                <!-- Column 2: Required Files -->
+                <div class="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-[#002d5d] font-bold text-sm flex items-center gap-2">
+                            <i data-lucide="file-stack" class="w-4 h-4 text-indigo-500"></i>
+                            الملفات المطلوبة من المجموعة
+                        </h3>
+                    </div>
+                    <p class="text-[10px] text-gray-400 italic mb-3">اسحب الملف على المجموعة المعنية</p>
+                    <div id="files-pool" class="flex flex-col gap-3 overflow-y-auto pr-1 scroll-hide" style="max-height:75vh"></div>
+                </div>
+
+                <!-- Column 3: Groups -->
+                <div class="lg:col-span-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-[#002d5d] font-bold text-sm flex items-center gap-2">
+                            <i data-lucide="users-round" class="w-4 h-4 text-purple-600"></i>
+                            مجموعات العمل
+                            <span id="groups-count" class="text-[10px] bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full font-bold mr-1">0</span>
+                        </h3>
+                        <span class="text-[9px] text-gray-400 italic">جاهزة من الإدمن</span>
+                    </div>
+                    <div id="groups-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto pr-1 scroll-hide" style="max-height:75vh"></div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('translate-x-full');
+            document.getElementById('sidebar-backdrop').classList.toggle('hidden');
+        }
+
+        const orders = [
+            { id: 'RQ-1001', name: 'شركة الصناعات المتقدمة' },
+            { id: 'RQ-1002', name: 'مصنع المعدات الثقيلة' },
+            { id: 'RQ-1003', name: 'شركة التقنية الحديثة' },
+            { id: 'RQ-1004', name: 'مجموعة البتروكيماويات' },
+            { id: 'RQ-1005', name: 'شركة الطاقة المستدامة' }
+        ];
+
+        const fileTypes = [
+            { id: 'MRD', name: 'MRD', label: 'تقرير دراسة السوق', icon: 'bar-chart-3', cls: 'file-mrd' },
+            { id: 'FTR', name: 'FTR', label: 'تقرير الدراسة الفنية', icon: 'settings-2', cls: 'file-ftr' },
+            { id: 'FMR', name: 'FMR', label: 'تقرير المخاطر المالية', icon: 'shield-alert', cls: 'file-fmr' }
+        ];
+
+        // Pre-populated groups (assigned by admin)
+        const groups = [
+            { id: 'g-1', name: 'مجموعة 1', employees: ['ناصر الراجحي', 'سارة خالد', 'ريم عبدالله'], projects: ['RQ-1001', 'RQ-1004'], files: [] },
+            { id: 'g-2', name: 'مجموعة 2', employees: ['أحمد علي', 'فهد منصور'], projects: ['RQ-1002'], files: [] },
+            { id: 'g-3', name: 'مجموعة 3', employees: ['خالد العمري', 'سارة خالد'], projects: ['RQ-1003'], files: [] },
+            { id: 'g-4', name: 'مجموعة 4', employees: ['ناصر الراجحي', 'ريم عبدالله'], projects: ['RQ-1005'], files: [] }
+        ];
+
+        let dragged = null;
+
+        function renderOrders() {
+            const pool = document.getElementById('orders-pool');
+            document.getElementById('orders-count').textContent = orders.length;
+            pool.innerHTML = '';
+            orders.forEach(o => {
+                const c = document.createElement('div');
+                c.className = 'order-card bg-white border-2 border-gray-200 rounded-lg p-2.5 shadow-sm hover:shadow-md';
+                c.draggable = true;
+                c.dataset.kind = 'order';
+                c.dataset.id = o.id;
+                c.dataset.name = o.name;
+                c.innerHTML = `
+                    <div class="flex items-start justify-between mb-1">
+                        <div class="bg-orange-50 p-1.5 rounded-md"><i data-lucide="briefcase" class="w-3.5 h-3.5 text-orange-600"></i></div>
+                        <i data-lucide="move" class="w-3 h-3 text-gray-300"></i>
+                    </div>
+                    <h4 class="text-[#002d5d] font-bold text-[11px] mb-0.5">${o.id}</h4>
+                    <p class="text-[9px] text-gray-500 leading-snug truncate">${o.name}</p>
+                `;
+                c.addEventListener('dragstart', onDragStart);
+                c.addEventListener('dragend', onDragEnd);
+                pool.appendChild(c);
+            });
+            lucide.createIcons();
+        }
+
+        function renderFiles() {
+            const pool = document.getElementById('files-pool');
+            pool.innerHTML = '';
+            fileTypes.forEach(f => {
+                const c = document.createElement('div');
+                c.className = `file-card border-2 ${f.cls} rounded-lg p-3 shadow-sm hover:shadow-md`;
+                c.draggable = true;
+                c.dataset.kind = 'file';
+                c.dataset.id = f.id;
+                c.dataset.label = f.label;
+                c.innerHTML = `
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="${f.icon}" class="w-4 h-4"></i>
+                            <span class="font-bold text-xs">${f.name}</span>
+                        </div>
+                        <i data-lucide="move" class="w-3 h-3 opacity-50"></i>
+                    </div>
+                    <p class="text-[10px] opacity-80 leading-snug">${f.label}</p>
+                `;
+                c.addEventListener('dragstart', onDragStart);
+                c.addEventListener('dragend', onDragEnd);
+                pool.appendChild(c);
+            });
+            lucide.createIcons();
+        }
+
+        function renderGroups() {
+            const wrap = document.getElementById('groups-container');
+            document.getElementById('groups-count').textContent = groups.length;
+            wrap.innerHTML = '';
+            groups.forEach(g => {
+                const card = document.createElement('div');
+                card.className = 'group-zone border-2 border-purple-200 bg-purple-50/20 rounded-xl p-3';
+                card.dataset.groupId = g.id;
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-2 pb-2 border-b border-purple-200">
+                        <div class="flex items-center gap-2">
+                            <div class="bg-purple-500 p-1 rounded"><i data-lucide="users-round" class="w-3.5 h-3.5 text-white"></i></div>
+                            <h4 class="text-xs font-bold text-[#002d5d]">${g.name}</h4>
+                        </div>
+                        <span class="text-[9px] text-gray-400">${g.employees.length}م · ${g.projects.length}ط · ${g.files.length}ملف</span>
+                    </div>
+
+                    <div class="mb-2">
+                        <div class="text-[9px] text-gray-500 font-bold mb-1">الموظفون</div>
+                        <div class="flex flex-wrap gap-1">
+                            ${g.employees.map(e => `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-[9px] font-bold"><i data-lucide="user" class="w-2.5 h-2.5"></i>${e}</span>`).join('')}
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <div class="text-[9px] text-gray-500 font-bold mb-1">الطلبات</div>
+                        <div class="flex flex-wrap gap-1">
+                            ${g.projects.map(p => `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded-full text-[9px] font-bold"><i data-lucide="briefcase" class="w-2.5 h-2.5"></i>${p}</span>`).join('')}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-[9px] text-gray-500 font-bold mb-1">الملفات المطلوبة</div>
+                        <div class="min-h-[40px] border-2 border-dashed border-indigo-200 rounded p-1.5 bg-white flex flex-wrap gap-1 items-start">
+                            ${g.files.length > 0
+                                ? g.files.map(f => {
+                                    const ft = fileTypes.find(x => x.id === f);
+                                    return `<span class="inline-flex items-center gap-1 px-2 py-0.5 ${ft.cls} border rounded-full text-[9px] font-bold">
+                                        <i data-lucide="${ft.icon}" class="w-2.5 h-2.5"></i>${ft.name}
+                                        <button onclick="removeFile('${g.id}','${f}')" class="opacity-60 hover:opacity-100 mr-0.5"><i data-lucide="x" class="w-2.5 h-2.5"></i></button>
+                                    </span>`;
+                                }).join('')
+                                : '<span class="text-[9px] text-gray-300 italic self-center mx-auto">اسحب ملف هنا</span>'
+                            }
+                        </div>
+                    </div>
+                `;
+                card.addEventListener('dragover', onDragOver);
+                card.addEventListener('dragleave', onDragLeave);
+                card.addEventListener('drop', onDrop);
+                wrap.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function onDragStart(e) {
+            dragged = { kind: this.dataset.kind, id: this.dataset.id, name: this.dataset.name || this.dataset.label };
+            this.classList.add('dragging');
+        }
+        function onDragEnd(e) { this.classList.remove('dragging'); }
+        function onDragOver(e) { e.preventDefault(); this.classList.add('drag-over'); }
+        function onDragLeave(e) { this.classList.remove('drag-over'); }
+
+        function onDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            if (!dragged) return;
+            const g = groups.find(x => x.id === this.dataset.groupId);
+            if (!g) return;
+
+            if (dragged.kind === 'file') {
+                if (g.files.includes(dragged.id)) {
+                    toast(`الملف ${dragged.id} موجود مسبقاً في ${g.name}`, 'warning');
+                } else {
+                    g.files.push(dragged.id);
+                    toast(`تم تعيين ${dragged.id} إلى ${g.name}`, 'success');
+                    renderGroups();
+                }
+            } else if (dragged.kind === 'order') {
+                if (g.projects.includes(dragged.id)) {
+                    toast(`الطلب ${dragged.id} موجود مسبقاً في ${g.name}`, 'warning');
+                } else {
+                    g.projects.push(dragged.id);
+                    toast(`تم إضافة ${dragged.id} إلى ${g.name}`, 'success');
+                    renderGroups();
+                }
+            }
+            dragged = null;
+        }
+
+        function removeFile(groupId, fileId) {
+            const g = groups.find(x => x.id === groupId);
+            if (g) g.files = g.files.filter(f => f !== fileId);
+            renderGroups();
+        }
+
+        function toast(message, type = 'info') {
+            const colors = { info: 'bg-blue-500', success: 'bg-green-500', warning: 'bg-orange-500' };
+            const t = document.createElement('div');
+            t.className = `fixed bottom-6 left-1/2 transform -translate-x-1/2 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg text-sm font-bold flex items-center gap-2 z-50`;
+            t.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'info'}" class="w-4 h-4"></i><span>${message}</span>`;
+            document.body.appendChild(t);
+            lucide.createIcons();
+            setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 2500);
+        }
+
+        renderOrders();
+        renderFiles();
+        renderGroups();
+    </script>
+</body>
+</html>
