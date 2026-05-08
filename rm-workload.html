@@ -219,7 +219,7 @@
 
         // Pre-populated groups (assigned by admin)
         const groups = [
-            { id: 'g-1', name: 'مجموعة 1', employees: ['ناصر الراجحي', 'سارة خالد', 'ريم عبدالله'], projects: ['RQ-2024-321', 'RQ-2024-815'], files: [] },
+            { id: 'g-1', name: 'مجموعة 1', employees: ['ناصر الراجحي', 'سارة خالد', 'ريم عبدالله'], projects: ['RQ-2024-321'], files: [] },
             { id: 'g-2', name: 'مجموعة 2', employees: ['أحمد علي', 'فهد منصور'], projects: ['RQ-2024-772'], files: [] },
             { id: 'g-3', name: 'مجموعة 3', employees: ['خالد العمري', 'سارة خالد'], projects: ['RQ-2024-901'], files: [] },
             { id: 'g-4', name: 'مجموعة 4', employees: ['ناصر الراجحي', 'ريم عبدالله'], projects: [], files: [] }
@@ -290,6 +290,10 @@
                 const card = document.createElement('div');
                 card.className = 'group-zone border-2 border-purple-200 bg-purple-50/20 rounded-xl p-3';
                 card.dataset.groupId = g.id;
+                const load = Math.min(g.projects.length * 3, 10);
+                const loadPercent = (load / 10) * 100;
+                const loadColor = load === 0 ? 'bg-gray-300' : load <= 4 ? 'bg-green-500' : load <= 7 ? 'bg-orange-500' : 'bg-red-500';
+                const loadTextColor = load === 0 ? 'text-gray-400' : load <= 4 ? 'text-green-600' : load <= 7 ? 'text-orange-600' : 'text-red-600';
                 card.innerHTML = `
                     <div class="flex items-center justify-between mb-2 pb-2 border-b border-purple-200">
                         <div class="flex items-center gap-2">
@@ -297,6 +301,16 @@
                             <h4 class="text-xs font-bold text-[#002d5d]">${g.name}</h4>
                         </div>
                         <span class="text-[9px] text-gray-400">${g.employees.length}م · ${g.projects.length}ط · ${g.files.length}ملف</span>
+                    </div>
+
+                    <div class="mb-2">
+                        <div class="flex items-center justify-between text-[9px] mb-1">
+                            <span class="text-gray-500 font-bold">الحمل</span>
+                            <span class="font-bold ${loadTextColor}">${load}/10</span>
+                        </div>
+                        <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                            <div class="${loadColor} h-full rounded-full transition-all" style="width:${loadPercent}%"></div>
+                        </div>
                     </div>
 
                     <div class="mb-2">
@@ -363,6 +377,8 @@
             } else if (dragged.kind === 'order') {
                 if (g.projects.includes(dragged.id)) {
                     toast(`الطلب ${dragged.id} موجود مسبقاً في ${g.name}`, 'warning');
+                } else if (g.projects.length >= 1) {
+                    toast(`${g.name} مكتملة - لا يمكن إضافة أكثر من طلب واحد`, 'warning');
                 } else {
                     g.projects.push(dragged.id);
                     toast(`تم إضافة ${dragged.id} إلى ${g.name}`, 'success');
