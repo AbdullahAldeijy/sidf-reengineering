@@ -19,6 +19,60 @@
             background-color: #f0fdf4;
             border-right: 4px solid #28a745;
         }
+        /* Tooltip identity */
+        .info-tip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #eef5ed;
+            color: #28a745;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: help;
+            margin-right: 6px;
+            transition: all 0.2s;
+        }
+        .info-tip:hover { background: #28a745; color: #fff; }
+        .info-tip .tip-content {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: 130%;
+            right: 50%;
+            transform: translateX(50%);
+            background: #002d5d;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.6;
+            padding: 8px 12px;
+            border-radius: 8px;
+            min-width: 200px;
+            max-width: 280px;
+            text-align: right;
+            white-space: normal;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+            transition: opacity 0.2s, visibility 0.2s;
+            z-index: 50;
+            pointer-events: none;
+        }
+        .info-tip .tip-content::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            right: 50%;
+            transform: translateX(50%);
+            border: 6px solid transparent;
+            border-top-color: #002d5d;
+        }
+        .info-tip:hover .tip-content {
+            visibility: visible;
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -134,23 +188,6 @@
 
             <div id="step-1-content">
 
-                <!-- 0. محاكي ربط API -->
-                <div class="bg-gradient-to-l from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 mb-4 flex items-center justify-between shadow-sm">
-                    <div class="flex items-center gap-3">
-                        <div class="bg-[#002d5d] text-white rounded-lg p-2.5">
-                            <i data-lucide="link-2" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <div class="text-[#002d5d] font-bold text-sm">محاكي ربط API الحكومي</div>
-                            <div class="text-[11px] text-gray-500">اضغط لجلب البيانات تلقائياً من الجهات الحكومية</div>
-                        </div>
-                    </div>
-                    <button id="api-sim-btn" onclick="simulateApiConnection()" class="bg-[#002d5d] text-white px-5 py-2 rounded-md text-xs font-bold flex items-center gap-2 hover:opacity-90 transition-all">
-                        <i data-lucide="zap" class="w-4 h-4" id="api-sim-btn-icon"></i>
-                        <span id="api-sim-btn-text">اتصال بـ API</span>
-                    </button>
-                </div>
-
                 <!-- 1. تفاصيل الترخيص -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
                     <div onclick="toggleAccordion('acc-license')" class="p-4 px-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30 cursor-pointer">
@@ -168,11 +205,12 @@
                                 <div class="text-right font-bold">وزارة الاستثمار</div>
                             </div>
                         </div>
+
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                             <div class="relative">
-                                <label class="block text-[11px] text-gray-400 mb-2">رقم السجل التجاري</label>
+                                <label class="block text-[11px] text-gray-400 mb-2">رقم السجل التجاري <span class="text-red-500">*</span></label>
                                 <div class="flex items-center border-b-2 border-gray-200 focus-within:border-green-500 transition-colors">
-                                    <input id="api-cr-number" type="text" value="" placeholder="—" class="w-full py-2 text-sm text-gray-700 bg-transparent outline-none text-right" readonly>
+                                    <input id="api-cr-number" type="text" value="" placeholder="ادخل رقم السجل التجاري" class="w-full py-2 text-sm text-gray-700 bg-transparent outline-none text-right">
                                     <i data-lucide="hash" class="w-4 h-4 text-gray-300 ml-2"></i>
                                 </div>
                             </div>
@@ -184,10 +222,63 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- محاكي ربط API الحكومي (تحت رقم السجل التجاري) -->
+                        <div class="bg-gradient-to-l from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-center justify-between shadow-sm">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-[#002d5d] text-white rounded-lg p-2.5">
+                                    <i data-lucide="link-2" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <div class="text-[#002d5d] font-bold text-sm">محاكي ربط API الحكومي</div>
+                                    <div class="text-[11px] text-gray-500">بعد إدخال رقم السجل التجاري، اضغط لجلب البيانات تلقائياً</div>
+                                </div>
+                            </div>
+                            <button id="api-sim-btn" onclick="simulateApiConnection()" class="bg-[#002d5d] text-white px-5 py-2 rounded-md text-xs font-bold flex items-center gap-2 hover:opacity-90 transition-all">
+                                <i data-lucide="zap" class="w-4 h-4" id="api-sim-btn-icon"></i>
+                                <span id="api-sim-btn-text">اتصال بـ API</span>
+                            </button>
+                        </div>
+
                         <div class="flex items-center justify-between bg-gray-50 rounded-lg p-4">
                             <span class="text-sm text-gray-600 font-bold">هل لديك ترخيص صناعي؟</span>
-                            <div id="api-industrial-toggle" onclick="this.querySelector('div').classList.toggle('translate-x-0');this.querySelector('div').classList.toggle('-translate-x-5');this.classList.toggle('bg-green-500');this.classList.toggle('bg-gray-300')" class="w-11 h-6 bg-gray-300 rounded-full relative cursor-pointer transition-colors">
+                            <div id="api-industrial-toggle" onclick="toggleIndustrialLicense()" class="w-11 h-6 bg-gray-300 rounded-full relative cursor-pointer transition-colors">
                                 <div class="w-5 h-5 bg-white rounded-full shadow absolute top-0.5 right-0.5 transition-transform translate-x-0"></div>
+                            </div>
+                        </div>
+
+                        <!-- نموذج الترخيص الصناعي (يظهر فقط عند التفعيل) -->
+                        <div id="industrial-license-form" class="hidden mt-4 border border-green-200 bg-green-50/30 rounded-lg p-5">
+                            <div class="flex items-center gap-2 mb-4">
+                                <i data-lucide="factory" class="w-4 h-4 text-[#28a745]"></i>
+                                <span class="text-[#002d5d] font-bold text-sm">بيانات الترخيص الصناعي</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-[11px] text-gray-500 font-bold mb-2">رقم الترخيص الصناعي <span class="text-red-500">*</span></label>
+                                    <input type="text" placeholder="ادخل رقم الترخيص" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-500 transition-colors text-right bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] text-gray-500 font-bold mb-2">جهة الإصدار</label>
+                                    <select class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-500 bg-white text-right">
+                                        <option value="">اختر الجهة</option>
+                                        <option>وزارة الصناعة والثروة المعدنية</option>
+                                        <option>هيئة المدن الصناعية (مدن)</option>
+                                        <option>هيئة تنمية الصادرات السعودية</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] text-gray-500 font-bold mb-2">تاريخ الإصدار</label>
+                                    <input type="date" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-500 bg-white text-right">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] text-gray-500 font-bold mb-2">تاريخ الانتهاء</label>
+                                    <input type="date" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-500 bg-white text-right">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-[11px] text-gray-500 font-bold mb-2">النشاط الصناعي</label>
+                                    <input type="text" placeholder="مثال: تصنيع منتجات بتروكيماوية" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-500 transition-colors text-right bg-white">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -290,33 +381,24 @@
                     <button onclick="window.location.href='page2.html'" class="bg-white border border-gray-200 text-gray-600 px-8 py-2 rounded-lg text-sm font-bold hover:bg-gray-50 flex items-center gap-2">
                         <i data-lucide="arrow-right" class="w-4 h-4"></i> السابق
                     </button>
-                    <button onclick="switchStep(2)" class="bg-[#28a745] hover:bg-green-700 text-white px-8 py-2 rounded-lg text-sm font-bold shadow flex items-center gap-2">
-                        التالي <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                    </button>
+                    <div class="flex items-center gap-3">
+                        <button onclick="saveAsDraft()" class="bg-white border border-[#002d5d] text-[#002d5d] px-6 py-2 rounded-lg text-sm font-bold hover:bg-[#002d5d] hover:text-white transition-all flex items-center gap-2">
+                            <i data-lucide="save" class="w-4 h-4"></i> حفظ كمسودة
+                        </button>
+                        <button onclick="switchStep(2)" class="bg-[#28a745] hover:bg-green-700 text-white px-8 py-2 rounded-lg text-sm font-bold shadow flex items-center gap-2">
+                            التالي <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                 </div>
 
             </div>
 
             <div id="step-2-content" class="hidden">
 
-                <!-- PATH SELECTOR -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                    <div id="opt-upload" onclick="switchPath('upload')" class="relative bg-[#28a745] text-white p-5 rounded-xl flex items-center gap-4 cursor-pointer shadow-md transition-all">
-                        <div class="bg-white/20 p-3 rounded-lg shrink-0"><i data-lucide="upload-cloud" class="w-7 h-7"></i></div>
-                        <div>
-                            <div class="font-bold text-sm">إرفاق ملف المشروع</div>
-                            <div class="text-xs opacity-80 mt-0.5">ارفع ملف PDF أو Word جاهز</div>
-                        </div>
-                        <span id="badge-upload" class="absolute top-2 left-2 bg-white text-[#28a745] rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">✓</span>
-                    </div>
-                    <div id="opt-template" onclick="switchPath('template')" class="relative bg-white border-2 border-gray-200 text-gray-500 p-5 rounded-xl flex items-center gap-4 cursor-pointer hover:border-green-300 transition-all">
-                        <div class="bg-gray-100 p-3 rounded-lg shrink-0"><i data-lucide="file-edit" class="w-7 h-7"></i></div>
-                        <div>
-                            <div class="font-bold text-sm text-gray-700">دراسة الجدوى</div>
-                            <div class="text-xs mt-0.5">أدخل البيانات وسيتم إنشاء المستند</div>
-                        </div>
-                        <span id="badge-template" style="display:none" class="absolute top-2 left-2 bg-[#28a745] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">✓</span>
-                    </div>
+                <!-- Step 2 intro: sequential flow -->
+                <div class="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-4 flex items-center gap-2 text-blue-700 text-xs">
+                    <i data-lucide="info" class="w-4 h-4 shrink-0"></i>
+                    <span>أكمل دراسة الجدوى أولاً، ثم سيتم تفعيل خيار إرفاق ملف المشروع لرفع المستندات الداعمة.</span>
                 </div>
 
                 <!-- PRODUCT / SERVICE SELECTOR -->
@@ -333,24 +415,29 @@
                             <div class="flex items-center gap-2 mb-3">
                                 <span class="bg-[#002d5d] text-white text-[10px] font-bold px-2 py-0.5 rounded">1</span>
                                 <span class="text-[#002d5d] font-bold text-sm">المنتجات المالية</span>
+                                <span class="info-tip">!<span class="tip-content">منتجات تمويلية تشمل قروض طويلة الأجل ورأس المال التشغيلي وتمويل الاستحواذ وحلول سلسلة التوريد.</span></span>
                             </div>
                             <div class="grid grid-cols-4 gap-2">
-                                <div onclick="toggleProduct(this)" data-key="project-finance" data-label="تمويل المشاريع" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                <div onclick="toggleProduct(this)" data-key="project-finance" data-label="تمويل المشاريع" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">قروض طويلة الأجل (حتى 20 سنة) لتمويل تأسيس أو توسعة المصانع، بفائدة ميسرة وفترة سماح.</span></span>
                                     <i data-lucide="building-2" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
                                     <div class="text-xs font-bold text-gray-700">تمويل المشاريع</div>
                                     <div class="text-[9px] text-gray-400 mt-0.5">قروض طويلة الأمد</div>
                                 </div>
-                                <div onclick="toggleProduct(this)" data-key="working-capital" data-label="رأس المال العامل" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                <div onclick="toggleProduct(this)" data-key="working-capital" data-label="رأس المال العامل" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">تمويل قصير الأجل لتغطية المصاريف اليومية والمخزون والذمم المدينة.</span></span>
                                     <i data-lucide="refresh-cw" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
                                     <div class="text-xs font-bold text-gray-700">رأس المال العامل</div>
                                     <div class="text-[9px] text-gray-400 mt-0.5">تمويل التكاليف اليومية</div>
                                 </div>
-                                <div onclick="toggleProduct(this)" data-key="acquisition-finance" data-label="تمويل الاستحواذ" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                <div onclick="toggleProduct(this)" data-key="acquisition-finance" data-label="تمويل الاستحواذ" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">تمويل عمليات الاستحواذ على المصانع والشركات الصناعية القائمة لتعزيز التوسع.</span></span>
                                     <i data-lucide="handshake" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
                                     <div class="text-xs font-bold text-gray-700">تمويل الاستحواذ</div>
                                     <div class="text-[9px] text-gray-400 mt-0.5">شراء شركات أخرى</div>
                                 </div>
-                                <div onclick="toggleProduct(this)" data-key="supply-chain" data-label="سلسلة التوريد" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                <div onclick="toggleProduct(this)" data-key="supply-chain" data-label="سلسلة التوريد" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">حلول لتمويل المدفوعات للموردين وتحسين دورة التدفق النقدي للمنشأة.</span></span>
                                     <i data-lucide="link" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
                                     <div class="text-xs font-bold text-gray-700">سلسلة التوريد</div>
                                     <div class="text-[9px] text-gray-400 mt-0.5">تحسين التدفق النقدي</div>
@@ -365,19 +452,23 @@
                             <div class="flex items-center gap-2 mb-3">
                                 <span class="bg-[#002d5d] text-white text-[10px] font-bold px-2 py-0.5 rounded">2</span>
                                 <span class="text-[#002d5d] font-bold text-sm">البرامج المتخصصة</span>
+                                <span class="info-tip">!<span class="tip-content">برامج تمويلية متخصصة لقطاعات الجيل الرابع، الطاقة المتجددة، ورفع المحتوى المحلي بمنح وحوافز إضافية.</span></span>
                             </div>
                             <div class="grid grid-cols-3 gap-2">
-                                <div onclick="toggleProduct(this)" data-key="tanafusiya" data-label="تنافسية (4IR)" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                <div onclick="toggleProduct(this)" data-key="tanafusiya" data-label="تنافسية (4IR)" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">تمويل تبني تقنيات الثورة الصناعية الرابعة كالروبوتات والذكاء الاصطناعي وإنترنت الأشياء في المصانع.</span></span>
                                     <i data-lucide="cpu" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
                                     <div class="text-xs font-bold text-gray-700">تنافسية (الجيل الرابع)</div>
                                     <div class="text-[9px] text-gray-400 mt-0.5">الأتمتة والتصنيع الذكي</div>
                                 </div>
-                                <div onclick="toggleProduct(this)" data-key="renewable-energy" data-label="الطاقة المتجددة" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                <div onclick="toggleProduct(this)" data-key="renewable-energy" data-label="الطاقة المتجددة" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">تمويل مشاريع الطاقة الشمسية وطاقة الرياح ومحطات تخزين الطاقة بشروط ميسرة.</span></span>
                                     <i data-lucide="zap" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
                                     <div class="text-xs font-bold text-gray-700">الطاقة المتجددة</div>
                                     <div class="text-[9px] text-gray-400 mt-0.5">مشاريع الطاقة النظيفة</div>
                                 </div>
-                                <div onclick="toggleProduct(this)" data-key="local-content" data-label="المحتوى المحلي" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                <div onclick="toggleProduct(this)" data-key="local-content" data-label="المحتوى المحلي" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">دعم المشاريع التي ترفع نسبة المحتوى المحلي وتحل محل المنتجات المستوردة.</span></span>
                                     <i data-lucide="flag" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
                                     <div class="text-xs font-bold text-gray-700">المحتوى المحلي</div>
                                     <div class="text-[9px] text-gray-400 mt-0.5">استبدال الواردات</div>
@@ -392,19 +483,23 @@
                             <div class="flex items-center gap-2 mb-3">
                                 <span class="bg-[#002d5d] text-white text-[10px] font-bold px-2 py-0.5 rounded">3</span>
                                 <span class="text-[#002d5d] font-bold text-sm">خدمات الدعم</span>
+                                <span class="info-tip">!<span class="tip-content">خدمات استشارية وضمانات وبرامج خاصة لدعم المنشآت الصناعية الصغيرة والمتوسطة.</span></span>
                             </div>
                             <div class="grid grid-cols-3 gap-2">
-                                <div onclick="toggleProduct(this)" data-key="advisory" data-label="الاستشارات" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                <div onclick="toggleProduct(this)" data-key="advisory" data-label="الاستشارات" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">خدمات استشارية فنية ومالية لمساعدة المنشأة في إعداد دراسات الجدوى وتطوير الأعمال.</span></span>
                                     <i data-lucide="users" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
                                     <div class="text-xs font-bold text-gray-700">الاستشارات</div>
                                     <div class="text-[9px] text-gray-400 mt-0.5">استشارات فنية ومالية</div>
                                 </div>
-                                <div onclick="toggleProduct(this)" data-key="sme-support" data-label="دعم المنشآت الصغيرة" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                <div onclick="toggleProduct(this)" data-key="sme-support" data-label="دعم المنشآت الصغيرة" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">برامج تمويل بشروط ميسرة وخطط سداد مرنة مخصصة للمنشآت الصغيرة والمتوسطة.</span></span>
                                     <i data-lucide="store" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
                                     <div class="text-xs font-bold text-gray-700">دعم المنشآت الصغيرة</div>
                                     <div class="text-[9px] text-gray-400 mt-0.5">خطط سداد مرنة</div>
                                 </div>
-                                <div onclick="toggleProduct(this)" data-key="guarantees" data-label="الضمانات" class="pcard border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                <div onclick="toggleProduct(this)" data-key="guarantees" data-label="الضمانات" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
+                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">ضمانات ائتمانية تسهّل حصول المنشأة على تسهيلات بنكية إضافية.</span></span>
                                     <i data-lucide="shield-check" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
                                     <div class="text-xs font-bold text-gray-700">الضمانات</div>
                                     <div class="text-[9px] text-gray-400 mt-0.5">ائتمان بنكي</div>
@@ -420,40 +515,8 @@
                     </div>
                 </div>
 
-                <!-- PATH A: FILE UPLOAD -->
-                <div id="path-upload">
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-                        <div class="p-4 px-6 border-b border-gray-100 flex items-center gap-2">
-                            <i data-lucide="upload-cloud" class="w-4 h-4 text-[#28a745]"></i>
-                            <span class="text-[#002d5d] font-bold text-sm">رفع ملف المشروع</span>
-                        </div>
-                        <div class="p-8">
-                            <div id="drop-zone" onclick="document.getElementById('file-input').click()"
-                                 ondragover="event.preventDefault();this.style.borderColor='#28a745';this.style.background='#f0fdf4'"
-                                 ondragleave="this.style.borderColor='#d1d5db';this.style.background=''"
-                                 ondrop="event.preventDefault();this.style.borderColor='#d1d5db';this.style.background='';handleFiles(event.dataTransfer.files)"
-                                 style="border:2px dashed #d1d5db;border-radius:12px;padding:48px;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer;transition:all 0.2s">
-                                <div style="background:#f0fdf4;padding:16px;border-radius:50%"><i data-lucide="cloud-upload" class="w-10 h-10 text-green-500"></i></div>
-                                <p class="text-sm text-gray-600 font-bold">اسحب الملفات هنا أو اضغط للاختيار</p>
-                                <p class="text-xs text-gray-400">PDF, DOC, DOCX — الحد الأقصى 25MB</p>
-                                <button class="bg-[#28a745] text-white px-6 py-2 rounded-lg text-xs font-bold flex items-center gap-2">
-                                    <i data-lucide="folder-open" class="w-4 h-4"></i> استعراض الملفات
-                                </button>
-                                <input type="file" id="file-input" class="hidden" accept=".pdf,.doc,.docx" multiple onchange="handleFiles(this.files)">
-                            </div>
-                            <div class="flex items-center gap-2 mt-4">
-                                <span class="text-[10px] text-gray-400 font-bold">الصيغ المقبولة:</span>
-                                <span class="bg-red-50 text-red-500 text-[10px] font-bold px-2 py-0.5 rounded">PDF</span>
-                                <span class="bg-blue-50 text-blue-500 text-[10px] font-bold px-2 py-0.5 rounded">DOC</span>
-                                <span class="bg-blue-50 text-blue-500 text-[10px] font-bold px-2 py-0.5 rounded">DOCX</span>
-                            </div>
-                            <div id="file-list" class="space-y-2 mt-4"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PATH B: TEMPLATE FORM + A4 PREVIEW -->
-                <div id="path-template" style="display:none">
+                <!-- PATH B: TEMPLATE FORM + A4 PREVIEW (يأتي أولاً) -->
+                <div id="path-template">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100">
                         <div class="p-4 px-6 border-b border-gray-100 flex items-center gap-2">
                             <i data-lucide="file-edit" class="w-4 h-4 text-[#28a745]"></i>
@@ -605,14 +668,62 @@
                     </div>
                 </div>
 
+                <!-- إرفاق ملف المشروع (يفتح بعد إكمال دراسة الجدوى) -->
+                <div id="path-upload" class="mt-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 relative">
+                        <div class="p-4 px-6 border-b border-gray-100 flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="upload-cloud" class="w-4 h-4 text-[#28a745]"></i>
+                                <span class="text-[#002d5d] font-bold text-sm">إرفاق ملف المشروع</span>
+                                <span class="text-[10px] text-gray-400">(مستندات داعمة بعد دراسة الجدوى)</span>
+                            </div>
+                            <div id="upload-status-pill" class="text-[10px] bg-gray-100 text-gray-500 px-3 py-1 rounded-full font-bold flex items-center gap-1">
+                                <i data-lucide="lock" class="w-3 h-3"></i> مغلق
+                            </div>
+                        </div>
+                        <div id="upload-locked-overlay" class="absolute inset-0 top-[57px] bg-white/85 backdrop-blur-sm rounded-b-xl flex flex-col items-center justify-center z-10 pointer-events-none">
+                            <div class="bg-gray-100 p-3 rounded-full mb-2"><i data-lucide="lock" class="w-6 h-6 text-gray-400"></i></div>
+                            <p class="text-sm text-gray-500 font-bold">أكمل بيانات دراسة الجدوى لتفعيل الرفع</p>
+                            <p class="text-xs text-gray-400 mt-1">يجب إدخال اسم المشروع كحد أدنى</p>
+                        </div>
+                        <div class="p-8">
+                            <div id="drop-zone" onclick="if(!isUploadLocked()) document.getElementById('file-input').click()"
+                                 ondragover="if(!isUploadLocked()){event.preventDefault();this.style.borderColor='#28a745';this.style.background='#f0fdf4'}"
+                                 ondragleave="this.style.borderColor='#d1d5db';this.style.background=''"
+                                 ondrop="if(!isUploadLocked()){event.preventDefault();this.style.borderColor='#d1d5db';this.style.background='';handleFiles(event.dataTransfer.files)}"
+                                 style="border:2px dashed #d1d5db;border-radius:12px;padding:48px;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer;transition:all 0.2s">
+                                <div style="background:#f0fdf4;padding:16px;border-radius:50%"><i data-lucide="cloud-upload" class="w-10 h-10 text-green-500"></i></div>
+                                <p class="text-sm text-gray-600 font-bold">اسحب الملفات هنا أو اضغط للاختيار</p>
+                                <p class="text-xs text-gray-400">PDF, DOC, DOCX — الحد الأقصى 25MB</p>
+                                <button class="bg-[#28a745] text-white px-6 py-2 rounded-lg text-xs font-bold flex items-center gap-2">
+                                    <i data-lucide="folder-open" class="w-4 h-4"></i> استعراض الملفات
+                                </button>
+                                <input type="file" id="file-input" class="hidden" accept=".pdf,.doc,.docx" multiple onchange="handleFiles(this.files)">
+                            </div>
+                            <div class="flex items-center gap-2 mt-4">
+                                <span class="text-[10px] text-gray-400 font-bold">الصيغ المقبولة:</span>
+                                <span class="bg-red-50 text-red-500 text-[10px] font-bold px-2 py-0.5 rounded">PDF</span>
+                                <span class="bg-blue-50 text-blue-500 text-[10px] font-bold px-2 py-0.5 rounded">DOC</span>
+                                <span class="bg-blue-50 text-blue-500 text-[10px] font-bold px-2 py-0.5 rounded">DOCX</span>
+                            </div>
+                            <div id="file-list" class="space-y-2 mt-4"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- FOOTER NAVIGATION -->
                 <div class="flex justify-between items-center mt-6">
                     <button onclick="switchStep(1)" class="bg-white border border-gray-200 text-gray-600 px-8 py-2 rounded-lg text-sm font-bold hover:bg-gray-50 flex items-center gap-2">
                         <i data-lucide="arrow-right" class="w-4 h-4"></i> السابق
                     </button>
-                    <button onclick="switchStep(3)" class="bg-[#28a745] hover:bg-green-700 text-white px-8 py-2 rounded-lg text-sm font-bold shadow flex items-center gap-2">
-                        التالي <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                    </button>
+                    <div class="flex items-center gap-3">
+                        <button onclick="saveAsDraft()" class="bg-white border border-[#002d5d] text-[#002d5d] px-6 py-2 rounded-lg text-sm font-bold hover:bg-[#002d5d] hover:text-white transition-all flex items-center gap-2">
+                            <i data-lucide="save" class="w-4 h-4"></i> حفظ كمسودة
+                        </button>
+                        <button onclick="switchStep(3)" class="bg-[#28a745] hover:bg-green-700 text-white px-8 py-2 rounded-lg text-sm font-bold shadow flex items-center gap-2">
+                            التالي <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                 </div>
 
             </div>
@@ -638,7 +749,10 @@
                                     <div class="bg-green-50 p-3 rounded-lg">
                                         <i data-lucide="banknote" class="w-6 h-6 text-green-600"></i>
                                     </div>
-                                    <span class="text-[10px] px-2 py-1 bg-red-50 text-red-600 rounded font-bold">مطلوب</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] px-2 py-1 bg-red-50 text-red-600 rounded font-bold">مطلوب</span>
+                                        <span class="info-tip" onclick="event.stopPropagation()">!<span class="tip-content">يتم التحقق من صافي الثروة عبر الربط مع البنك المركزي السعودي (ساما) للحصول على الرصيد الإجمالي والتأكد من ملاءة المنشأة.</span></span>
+                                    </div>
                                 </div>
                                 <h4 class="text-[#002d5d] font-bold text-sm mb-1">صافي الثروة</h4>
                                 <p class="text-[10px] text-gray-400 mb-4">Net Worth Proof</p>
@@ -662,7 +776,10 @@
                                     <div class="bg-blue-50 p-3 rounded-lg">
                                         <i data-lucide="home" class="w-6 h-6 text-blue-600"></i>
                                     </div>
-                                    <span class="text-[10px] px-2 py-1 bg-gray-100 text-gray-500 rounded font-bold">اختياري</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] px-2 py-1 bg-gray-100 text-gray-500 rounded font-bold">اختياري</span>
+                                        <span class="info-tip" onclick="event.stopPropagation()">!<span class="tip-content">يتم التحقق من ملكية العقارات عبر الربط مع وزارة العدل (منصة ناجز) للاطلاع على الصكوك العقارية المسجلة.</span></span>
+                                    </div>
                                 </div>
                                 <h4 class="text-[#002d5d] font-bold text-sm mb-1">عقارات</h4>
                                 <p class="text-[10px] text-gray-400 mb-4">Real Estate Proof</p>
@@ -686,7 +803,10 @@
                                     <div class="bg-orange-50 p-3 rounded-lg">
                                         <i data-lucide="trending-up" class="w-6 h-6 text-orange-600"></i>
                                     </div>
-                                    <span class="text-[10px] px-2 py-1 bg-gray-100 text-gray-500 rounded font-bold">اختياري</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] px-2 py-1 bg-gray-100 text-gray-500 rounded font-bold">اختياري</span>
+                                        <span class="info-tip" onclick="event.stopPropagation()">!<span class="tip-content">يتم التحقق من الأسهم عبر الربط مع هيئة السوق المالية (CMA) وتداول السعودية للاطلاع على المحفظة الاستثمارية للمالك.</span></span>
+                                    </div>
                                 </div>
                                 <h4 class="text-[#002d5d] font-bold text-sm mb-1">أسهم</h4>
                                 <p class="text-[10px] text-gray-400 mb-4">Stocks Proof</p>
@@ -710,7 +830,10 @@
                                     <div class="bg-red-50 p-3 rounded-lg">
                                         <i data-lucide="shield-alert" class="w-6 h-6 text-red-500"></i>
                                     </div>
-                                    <span class="text-[10px] px-2 py-1 bg-gray-100 text-gray-500 rounded font-bold">اختياري</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] px-2 py-1 bg-gray-100 text-gray-500 rounded font-bold">اختياري</span>
+                                        <span class="info-tip" onclick="event.stopPropagation()">!<span class="tip-content">يتم التحقق من الرهون والالتزامات الائتمانية عبر الربط مع الشركة السعودية للمعلومات الائتمانية (سمة).</span></span>
+                                    </div>
                                 </div>
                                 <h4 class="text-[#002d5d] font-bold text-sm mb-1">رهن</h4>
                                 <p class="text-[10px] text-gray-400 mb-4">Mortgage Proof</p>
@@ -786,9 +909,14 @@
                     <button onclick="switchStep(2)" class="bg-white border border-gray-200 text-gray-600 px-8 py-2 rounded-lg text-sm font-bold hover:bg-gray-50 flex items-center gap-2">
                         <i data-lucide="arrow-right" class="w-4 h-4"></i> السابق
                     </button>
-                    <button id="submit-btn" onclick="validateAndSubmit()" class="bg-[#28a745] hover:bg-green-700 text-white px-8 py-2 rounded-lg text-sm font-bold shadow flex items-center gap-2">
-                        التالي <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                    </button>
+                    <div class="flex items-center gap-3">
+                        <button onclick="saveAsDraft()" class="bg-white border border-[#002d5d] text-[#002d5d] px-6 py-2 rounded-lg text-sm font-bold hover:bg-[#002d5d] hover:text-white transition-all flex items-center gap-2">
+                            <i data-lucide="save" class="w-4 h-4"></i> حفظ كمسودة
+                        </button>
+                        <button id="submit-btn" onclick="validateAndSubmit()" class="bg-[#28a745] hover:bg-green-700 text-white px-8 py-2 rounded-lg text-sm font-bold shadow flex items-center gap-2">
+                            التالي <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                 </div>
 
             </div>
@@ -918,35 +1046,36 @@
             window.location.href = 'submitted.html';
         }
 
-        // Step 2: Path switching with badge toggle
-        function switchPath(path) {
-            const upload   = document.getElementById('path-upload');
-            const template = document.getElementById('path-template');
-            const optU     = document.getElementById('opt-upload');
-            const optT     = document.getElementById('opt-template');
-            const badgeU   = document.getElementById('badge-upload');
-            const badgeT   = document.getElementById('badge-template');
+        // Save as draft
+        function saveAsDraft() {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#002d5d] text-white px-6 py-3 rounded-lg shadow-lg text-sm font-bold flex items-center gap-2 z-50';
+            toast.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i><span>تم حفظ المسودة بنجاح</span>';
+            document.body.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => { toast.style.opacity='0'; toast.style.transition='opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 2200);
+        }
 
-            const activeCard   = 'relative bg-[#28a745] text-white p-5 rounded-xl flex items-center gap-4 cursor-pointer shadow-md transition-all duration-200 ring-2 ring-[#28a745] ring-offset-2';
-            const inactiveCard = 'relative bg-white border-2 border-gray-200 text-gray-500 p-5 rounded-xl flex items-center gap-4 cursor-pointer hover:border-green-300 transition-all duration-200';
+        // Lock state for upload section
+        function isUploadLocked() {
+            const overlay = document.getElementById('upload-locked-overlay');
+            return overlay && !overlay.classList.contains('hidden');
+        }
 
-            if (path === 'upload') {
-                upload.classList.remove('hidden');
-                template.classList.add('hidden');
-                optU.className = activeCard;
-                optT.className = inactiveCard;
-                badgeU.classList.remove('hidden'); badgeU.classList.add('flex');
-                badgeT.classList.remove('flex');   badgeT.classList.add('hidden');
+        function refreshUploadLock() {
+            const nameField = document.getElementById('tmpl-name');
+            const overlay = document.getElementById('upload-locked-overlay');
+            const pill = document.getElementById('upload-status-pill');
+            if (!nameField || !overlay || !pill) return;
+            const filled = nameField.value.trim().length > 0;
+            if (filled) {
+                overlay.classList.add('hidden');
+                pill.className = 'text-[10px] bg-green-50 text-green-600 px-3 py-1 rounded-full font-bold flex items-center gap-1';
+                pill.innerHTML = '<i data-lucide="unlock" class="w-3 h-3"></i> مفتوح';
             } else {
-                template.classList.remove('hidden');
-                upload.classList.add('hidden');
-                optT.className = activeCard;
-                optU.className = inactiveCard;
-                badgeT.classList.remove('hidden'); badgeT.classList.add('flex');
-                badgeU.classList.remove('flex');   badgeU.classList.add('hidden');
-                // Stamp today's date in the preview
-                document.getElementById('prev-date').textContent =
-                    new Date().toLocaleDateString('ar-SA-u-nu-latn', {year:'numeric', month:'long', day:'numeric'});
+                overlay.classList.remove('hidden');
+                pill.className = 'text-[10px] bg-gray-100 text-gray-500 px-3 py-1 rounded-full font-bold flex items-center gap-1';
+                pill.innerHTML = '<i data-lucide="lock" class="w-3 h-3"></i> مغلق';
             }
             lucide.createIcons();
         }
@@ -1023,38 +1152,6 @@
             updatePreview();
         }
 
-        function switchPath(path) {
-            var upload   = document.getElementById('path-upload');
-            var template = document.getElementById('path-template');
-            var optU     = document.getElementById('opt-upload');
-            var optT     = document.getElementById('opt-template');
-            var badgeU   = document.getElementById('badge-upload');
-            var badgeT   = document.getElementById('badge-template');
-
-            if (path === 'upload') {
-                upload.style.display    = '';
-                template.style.display  = 'none';
-                optU.style.background   = '#28a745';
-                optU.style.color        = '#fff';
-                optT.style.background   = '#fff';
-                optT.style.color        = '#6b7280';
-                badgeU.style.display    = 'flex';
-                badgeT.style.display    = 'none';
-            } else {
-                upload.style.display    = 'none';
-                template.style.display  = '';
-                optT.style.background   = '#28a745';
-                optT.style.color        = '#fff';
-                optU.style.background   = '#fff';
-                optU.style.color        = '#6b7280';
-                badgeT.style.display    = 'flex';
-                badgeU.style.display    = 'none';
-                document.getElementById('prev-date').textContent =
-                    new Date().toLocaleDateString('ar-SA-u-nu-latn', {year:'numeric', month:'long', day:'numeric'});
-            }
-            lucide.createIcons();
-        }
-
         function handleFiles(files) {
             var list = document.getElementById('file-list');
             Array.from(files).forEach(function(f) {
@@ -1109,14 +1206,49 @@
                 wrap.style.display = 'none';
                 pp.innerHTML = '';
             }
+            refreshUploadLock();
+        }
+
+        function toggleIndustrialLicense() {
+            const toggle = document.getElementById('api-industrial-toggle');
+            const knob = toggle.querySelector('div');
+            const form = document.getElementById('industrial-license-form');
+            const isOn = toggle.classList.contains('bg-green-500');
+            if (isOn) {
+                toggle.classList.remove('bg-green-500');
+                toggle.classList.add('bg-gray-300');
+                knob.classList.remove('-translate-x-5');
+                knob.classList.add('translate-x-0');
+                form.classList.add('hidden');
+            } else {
+                toggle.classList.remove('bg-gray-300');
+                toggle.classList.add('bg-green-500');
+                knob.classList.remove('translate-x-0');
+                knob.classList.add('-translate-x-5');
+                form.classList.remove('hidden');
+            }
         }
 
         function simulateApiConnection() {
             const btn = document.getElementById('api-sim-btn');
             const btnText = document.getElementById('api-sim-btn-text');
             const btnIcon = document.getElementById('api-sim-btn-icon');
+            const crInput = document.getElementById('api-cr-number');
 
             if (btn.disabled) return;
+
+            // Require CR number first
+            if (!crInput.value.trim()) {
+                crInput.focus();
+                crInput.style.borderBottomColor = '#ef4444';
+                btnText.textContent = 'أدخل رقم السجل أولاً';
+                setTimeout(() => {
+                    btnText.textContent = 'اتصال بـ API';
+                    crInput.style.borderBottomColor = '';
+                }, 1500);
+                return;
+            }
+
             btn.disabled = true;
             btn.style.opacity = '0.75';
             btn.style.cursor = 'wait';
@@ -1131,19 +1263,8 @@
                 trade.className = 'bg-[#28a745] text-white p-4 rounded-lg flex justify-between items-center cursor-pointer';
                 trade.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5"></i><div class="text-right font-bold text-xs">وزارة التجارة</div>';
 
-                // CR number + date
-                document.getElementById('api-cr-number').value = '4031287456';
+                // CR date (CR number kept from user input)
                 document.getElementById('api-cr-date').value = '11/01/1447';
-
-                // Industrial license toggle ON
-                const toggle = document.getElementById('api-industrial-toggle');
-                if (toggle.classList.contains('bg-gray-300')) {
-                    toggle.classList.remove('bg-gray-300');
-                    toggle.classList.add('bg-green-500');
-                    const knob = toggle.querySelector('div');
-                    knob.classList.remove('translate-x-0');
-                    knob.classList.add('-translate-x-5');
-                }
 
                 // Authorized person row
                 document.getElementById('api-auth-row').innerHTML =
@@ -1153,10 +1274,11 @@
                     '<td class="p-3 border-l border-gray-50">+966 50 000 0000</td>' +
                     '<td class="p-3">a.alsaeed@example.com</td>';
 
-                // Commercial registry row
+                // Commercial registry row (uses user-entered CR number)
+                const crVal = document.getElementById('api-cr-number').value || '4031287456';
                 document.getElementById('api-cr-row').innerHTML =
                     '<td class="p-3 border-l border-gray-50">شركة X</td>' +
-                    '<td class="p-3 border-l border-gray-50">4031287456</td>' +
+                    '<td class="p-3 border-l border-gray-50">' + crVal + '</td>' +
                     '<td class="p-3 border-l border-gray-50">الرياض</td>' +
                     '<td class="p-3 border-l border-gray-50">11/01/1447</td>' +
                     '<td class="p-3 border-l border-gray-50">500,000 ريال</td>' +
@@ -1219,8 +1341,11 @@
             } else if (step === 2) {
                 circles[1].className = "w-10 h-10 rounded-full border-2 border-orange-400 bg-white flex items-center justify-center text-orange-400 font-bold mb-2 transition-all";
                 texts[1].className = "text-[11px] text-[#002d5d] font-bold";
+                const prevDate = document.getElementById('prev-date');
+                if (prevDate) prevDate.textContent = new Date().toLocaleDateString('ar-SA-u-nu-latn', {year:'numeric', month:'long', day:'numeric'});
+                refreshUploadLock();
             }
-            
+
             lucide.createIcons();
         }
     </script>
