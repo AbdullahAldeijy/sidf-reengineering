@@ -6,7 +6,9 @@
     <title>طلب القرض - SIDF</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body {
             font-family: 'Cairo', sans-serif;
@@ -72,6 +74,21 @@
         .info-tip:hover .tip-content {
             visibility: visible;
             opacity: 1;
+        }
+
+        /* ═══════════ Feasibility Study Form ═══════════ */
+        .fs-tab { background: transparent; color: #6b7280; border: 1px solid #e5e7eb; cursor: pointer; }
+        .fs-tab:hover { background: #f9fafb; }
+        .fs-tab.active { background: #f0fdf4; color: #15803d; border-color: #16a34a; }
+        .fs-mtab { background: transparent; color: #6b7280; border: 0; cursor: pointer; }
+        .fs-mtab.active { background: #fff; color: #15803d; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+        .fs-input:focus { outline: none; border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,0.12); }
+        .fs-section { animation: fsFade 0.2s ease-out; }
+        @keyframes fsFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        #pdf-preview table td input { font-family: inherit; }
+        @media print {
+            #fs-preview-shell { background: white !important; padding: 0 !important; height: auto !important; box-shadow: none !important; }
+            #pdf-preview { box-shadow: none !important; }
         }
     </style>
 </head>
@@ -515,103 +532,531 @@
                     </div>
                 </div>
 
-                <!-- PATH B: TEMPLATE FORM + A4 PREVIEW (يأتي أولاً) -->
+                <!-- PATH B: COMPREHENSIVE FEASIBILITY STUDY FORM + LIVE PDF PREVIEW -->
                 <div id="path-template">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-                        <div class="p-4 px-6 border-b border-gray-100 flex items-center gap-2">
-                            <i data-lucide="file-edit" class="w-4 h-4 text-[#28a745]"></i>
-                            <span class="text-[#002d5d] font-bold text-sm">دراسة الجدوى</span>
+                        <!-- Header -->
+                        <div class="p-4 px-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="file-edit" class="w-4 h-4 text-[#16a34a]"></i>
+                                <span class="text-[#002d5d] font-bold text-sm">دراسة الجدوى</span>
+                                <span id="fs-saved-tag" class="text-[10px] text-gray-400 hidden">آخر حفظ: —</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="fsScrollPreview()" class="bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1 hover:bg-gray-50 transition-colors">
+                                    <i data-lucide="eye" class="w-3 h-3"></i> معاينة دراسة الجدوى (PDF)
+                                </button>
+                                <button onclick="fsDownloadPDF()" class="bg-[#16a34a] hover:bg-[#15803d] text-white px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-colors">
+                                    <i data-lucide="download" class="w-3 h-3"></i> تحميل PDF
+                                </button>
+                            </div>
                         </div>
+
+                        <!-- Progress bar -->
+                        <div class="px-6 pt-4">
+                            <div class="flex items-center justify-between text-[11px] mb-1">
+                                <span class="text-gray-500 font-bold">نسبة الإكمال</span>
+                                <span id="fs-progress-label" class="text-[#16a34a] font-bold">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div id="fs-progress-bar" class="bg-[#16a34a] h-full rounded-full transition-all" style="width:0%"></div>
+                            </div>
+                        </div>
+
                         <div class="p-6">
-                            <div class="flex flex-col lg:flex-row gap-6 lg:gap-6 items-stretch lg:items-start" style="direction:rtl">
+                            <!-- Section nav tabs -->
+                            <div class="flex flex-wrap gap-1.5 mb-5 border-b border-gray-100 pb-3" id="fs-tabs">
+                                <button data-section="s1" class="fs-tab active flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold transition-all">
+                                    <span class="fs-tab-num bg-[#16a34a] text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px]">1</span>
+                                    المقدمة
+                                    <i data-lucide="check" class="fs-tab-check w-3.5 h-3.5 text-[#16a34a] hidden"></i>
+                                </button>
+                                <button data-section="s2" class="fs-tab flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold transition-all">
+                                    <span class="fs-tab-num bg-gray-200 text-gray-500 w-5 h-5 rounded-full flex items-center justify-center text-[10px]">2</span>
+                                    دراسة السوق
+                                    <i data-lucide="check" class="fs-tab-check w-3.5 h-3.5 text-[#16a34a] hidden"></i>
+                                </button>
+                                <button data-section="s3" class="fs-tab flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold transition-all">
+                                    <span class="fs-tab-num bg-gray-200 text-gray-500 w-5 h-5 rounded-full flex items-center justify-center text-[10px]">3</span>
+                                    الدراسة الفنية
+                                    <i data-lucide="check" class="fs-tab-check w-3.5 h-3.5 text-[#16a34a] hidden"></i>
+                                </button>
+                                <button data-section="s4" class="fs-tab flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold transition-all">
+                                    <span class="fs-tab-num bg-gray-200 text-gray-500 w-5 h-5 rounded-full flex items-center justify-center text-[10px]">4</span>
+                                    الدراسة المالية
+                                    <i data-lucide="check" class="fs-tab-check w-3.5 h-3.5 text-[#16a34a] hidden"></i>
+                                </button>
+                            </div>
 
-                                <!-- FORM (right side in RTL) -->
-                                <div style="flex:1;min-width:0">
+                            <div class="flex flex-col lg:flex-row gap-6 items-stretch lg:items-start" style="direction:rtl">
+                                <!-- FORM (60%) -->
+                                <div style="flex:1;min-width:0" class="space-y-4">
 
-                                    <div class="mb-4">
-                                        <label class="block text-xs text-gray-500 font-bold mb-1">اسم المشروع <span class="text-red-500">*</span></label>
-                                        <input type="text" id="tmpl-name" oninput="updatePreview()" placeholder="أدخل اسم المشروع"
-                                               class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-500 transition-colors" style="text-align:right">
+                                    <!-- ════════════════════════════════════ SECTION 1: المقدمة ════════════════════════════════════ -->
+                                    <div id="fs-section-s1" class="fs-section">
+                                        <h3 class="fs-h text-[#002d5d] font-bold text-sm border-r-4 border-[#16a34a] pr-2 mb-4">١. المقدمة</h3>
+
+                                        <!-- 1.0 Project name (required for upload unlock) -->
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-[11px] text-gray-500 font-bold mb-1">اسم المشروع <span class="text-red-500">*</span></label>
+                                            <input type="text" id="tmpl-name" data-fs="s1.projectName" oninput="fsOnInput()" placeholder="أدخل اسم المشروع"
+                                                   class="fs-input w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" style="text-align:right">
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <label class="text-xs text-[#002d5d] font-bold">١.١ وصف المشروع <span class="text-red-500">*</span></label>
+                                            </div>
+                                            <p class="text-[10px] text-gray-400 mb-2">صف المشروع، نطاقه، عناصره الرئيسية، وهدفه. للمشاريع التوسعية اشرح العلاقة بين القائم والتوسعة.</p>
+                                            <textarea data-fs="s1.projectDesc" oninput="fsOnInput()" rows="4" placeholder="اكتب وصفاً تفصيلياً..."
+                                                      class="fs-input w-full border border-gray-200 rounded-lg p-3 text-sm resize-none" style="text-align:right"></textarea>
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">١.٢ الهيكل التنظيمي</label>
+                                            <textarea data-fs="s1.orgDesc" oninput="fsOnInput()" rows="2" placeholder="وصف عام للهيكل التنظيمي..."
+                                                      class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-3" style="text-align:right"></textarea>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                    <thead class="bg-gray-50">
+                                                        <tr>
+                                                            <th class="p-2 text-right">المنصب</th>
+                                                            <th class="p-2 text-right">الاسم</th>
+                                                            <th class="p-2 text-right">السيرة الذاتية</th>
+                                                            <th class="p-2 w-10"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="tbl-positions"></tbody>
+                                                </table>
+                                            </div>
+                                            <button type="button" onclick="fsAddRow('positions')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة منصب</button>
+                                            <label class="block text-xs text-[#002d5d] font-bold mt-4 mb-1">خطة توطين الوظائف</label>
+                                            <textarea data-fs="s1.saudization" oninput="fsOnInput()" rows="2" placeholder="نسبة التوطين والخطة..."
+                                                      class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none" style="text-align:right"></textarea>
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">١.٣ خطة تنفيذ المشروع</label>
+                                            <div class="grid grid-cols-2 gap-2 mb-3">
+                                                <div>
+                                                    <label class="block text-[10px] text-gray-500 font-bold mb-1">تاريخ البداية</label>
+                                                    <input type="date" data-fs="s1.implStart" oninput="fsOnInput()" class="fs-input w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[10px] text-gray-500 font-bold mb-1">تاريخ النهاية</label>
+                                                    <input type="date" data-fs="s1.implEnd" oninput="fsOnInput()" class="fs-input w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs">
+                                                </div>
+                                            </div>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                    <thead class="bg-gray-50">
+                                                        <tr><th class="p-2 text-right">المرحلة</th><th class="p-2 text-right">البداية</th><th class="p-2 text-right">النهاية</th><th class="p-2 w-10"></th></tr>
+                                                    </thead>
+                                                    <tbody id="tbl-milestones"></tbody>
+                                                </table>
+                                            </div>
+                                            <button type="button" onclick="fsAddRow('milestones')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة مرحلة</button>
+                                        </div>
                                     </div>
 
-                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="mb-4">
-                                        <div>
-                                            <label class="block text-xs text-gray-500 font-bold mb-1">نوع المشروع</label>
-                                            <select id="tmpl-type" onchange="updatePreview()"
-                                                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-500 bg-white" style="text-align:right">
-                                                <option value="">اختر النوع</option>
-                                                <option>مشروع صناعي</option>
-                                                <option>مشروع زراعي</option>
-                                                <option>مشروع خدمي</option>
-                                                <option>مشروع تقني</option>
-                                                <option>مشروع طاقة</option>
-                                                <option>مشروع تعديني</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs text-gray-500 font-bold mb-1">موقع المشروع</label>
-                                            <select id="tmpl-city" onchange="updatePreview()"
-                                                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-500 bg-white" style="text-align:right">
-                                                <option value="">اختر المدينة</option>
-                                                <option>الرياض</option><option>جدة</option><option>الدمام</option>
-                                                <option>مكة المكرمة</option><option>المدينة المنورة</option>
-                                                <option>تبوك</option><option>أبها</option><option>نجران</option>
-                                                <option>حائل</option><option>القصيم</option>
-                                            </select>
-                                        </div>
-                                    </div>
+                                    <!-- ════════════════════════════════════ SECTION 2: دراسة السوق ════════════════════════════════════ -->
+                                    <div id="fs-section-s2" class="fs-section hidden">
+                                        <h3 class="fs-h text-[#002d5d] font-bold text-sm border-r-4 border-[#16a34a] pr-2 mb-4">٢. دراسة السوق</h3>
 
-                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="mb-4">
-                                        <div>
-                                            <label class="block text-xs text-gray-500 font-bold mb-1">حجم الاستثمار</label>
-                                            <div class="flex border border-gray-200 rounded-lg overflow-hidden focus-within:border-green-500">
-                                                <input type="text" id="tmpl-investment" oninput="updatePreview()" placeholder="0,000,000"
-                                                       class="flex-1 px-3 py-2 text-sm outline-none" style="text-align:right">
-                                                <span class="bg-gray-50 px-2 text-[10px] text-gray-400 flex items-center border-r border-gray-100">ر.س</span>
+                                        <!-- Market tabs -->
+                                        <div class="flex gap-1 mb-3 bg-gray-50 p-1 rounded-lg">
+                                            <button onclick="fsSetMarket('local')" data-market="local" class="fs-mtab flex-1 px-3 py-1.5 rounded text-[11px] font-bold transition-all">السوق المحلي</button>
+                                            <button onclick="fsSetMarket('gulf')" data-market="gulf" class="fs-mtab flex-1 px-3 py-1.5 rounded text-[11px] font-bold transition-all">دول الخليج</button>
+                                            <button onclick="fsSetMarket('export')" data-market="export" class="fs-mtab flex-1 px-3 py-1.5 rounded text-[11px] font-bold transition-all">التصدير</button>
+                                        </div>
+                                        <p class="text-[10px] text-gray-400 italic mb-4">جميع حقول هذا القسم خاصة بـ <span id="fs-market-label" class="text-[#16a34a] font-bold">السوق المحلي</span></p>
+
+                                        <!-- 2.1 Products -->
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٢.١ المنتجات</label>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                    <thead class="bg-gray-50"><tr><th class="p-2 text-right">المنتج</th><th class="p-2 text-right">الاسم التجاري</th><th class="p-2 text-right">الاستخدام</th><th class="p-2 text-right">الأنواع/الأحجام</th><th class="p-2 w-10"></th></tr></thead>
+                                                    <tbody id="tbl-products"></tbody>
+                                                </table>
+                                            </div>
+                                            <button type="button" onclick="fsAddRow('products')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة منتج</button>
+                                            <label class="block text-xs text-[#002d5d] font-bold mt-3 mb-1">وصف تفصيلي للمنتج</label>
+                                            <textarea data-fs="m.productDesc" oninput="fsOnInput()" rows="2" class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none" style="text-align:right"></textarea>
+                                            <label class="block text-xs text-[#002d5d] font-bold mt-2 mb-1">المعايير السعودية/الدولية المطبقة</label>
+                                            <textarea data-fs="m.standards" oninput="fsOnInput()" rows="2" class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none" style="text-align:right"></textarea>
+                                            <label class="block text-xs text-[#002d5d] font-bold mt-2 mb-1">برنامج الإنتاج المقترح للسنوات الخمس</label>
+                                            <textarea data-fs="m.productionPlan" oninput="fsOnInput()" rows="2" class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none" style="text-align:right"></textarea>
+                                        </div>
+
+                                        <!-- 2.2 Supply -->
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٢.٢ العرض</label>
+                                            <textarea data-fs="m.supplySource" oninput="fsOnInput()" rows="2" placeholder="مصادر العرض الحالية..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-2" style="text-align:right"></textarea>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                    <thead class="bg-gray-50"><tr><th class="p-2 text-right">الشركة</th><th class="p-2 text-right">الدولة</th><th class="p-2 text-right">المنتجات</th><th class="p-2 text-right">السعة</th><th class="p-2 text-right">الحصة %</th><th class="p-2 text-right">الهاتف</th><th class="p-2 w-10"></th></tr></thead>
+                                                    <tbody id="tbl-suppliers"></tbody>
+                                                </table>
+                                            </div>
+                                            <button type="button" onclick="fsAddRow('suppliers')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة مورد/منافس</button>
+                                        </div>
+
+                                        <!-- 2.3 Demand -->
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٢.٣ الطلب — الطلب التاريخي (آخر ٥ سنوات)</label>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                    <thead class="bg-gray-50"><tr><th class="p-2 text-right">السنة</th><th class="p-2 text-right">الإنتاج المحلي</th><th class="p-2 text-right">الواردات</th><th class="p-2 text-right">الصادرات</th><th class="p-2 text-right bg-green-50">إجمالي الطلب</th></tr></thead>
+                                                    <tbody id="tbl-demandHist"></tbody>
+                                                </table>
+                                            </div>
+                                            <label class="block text-xs text-[#002d5d] font-bold mt-3 mb-2">الطلب المتوقع (السنوات الخمس القادمة)</label>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                    <thead class="bg-gray-50"><tr><th class="p-2 text-right">السنة</th><th class="p-2 text-right">الطلب المتوقع</th><th class="p-2 text-right">الافتراضات</th></tr></thead>
+                                                    <tbody id="tbl-demandFuture"></tbody>
+                                                </table>
+                                            </div>
+                                            <label class="block text-xs text-[#002d5d] font-bold mt-2 mb-1">المنهجية المستخدمة لتقدير الطلب</label>
+                                            <textarea data-fs="m.demandMethod" oninput="fsOnInput()" rows="2" class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none" style="text-align:right"></textarea>
+                                        </div>
+
+                                        <!-- 2.4 Marketing strategy -->
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٢.٤ الاستراتيجية التسويقية</label>
+                                            <textarea data-fs="m.strategy" oninput="fsOnInput()" rows="2" placeholder="الأسواق المستهدفة، نقاط القوة، الميزات التنافسية..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-2" style="text-align:right"></textarea>
+                                            <label class="block text-[11px] text-[#002d5d] font-bold mb-1">خبرة المالك في هذا المجال</label>
+                                            <textarea data-fs="m.ownerExp" oninput="fsOnInput()" rows="2" class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none" style="text-align:right"></textarea>
+                                        </div>
+
+                                        <!-- 2.5 Pricing -->
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٢.٥ التسعير — نطاق سعر السوق</label>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                    <thead class="bg-gray-50"><tr><th class="p-2 text-right">المنتج</th><th class="p-2 text-right">متوسط السعر/الوحدة (ر.س)</th><th class="p-2 text-right">سعر التصدير/الوحدة (ر.س)</th><th class="p-2 w-10"></th></tr></thead>
+                                                    <tbody id="tbl-priceRange"></tbody>
+                                                </table>
+                                            </div>
+                                            <button type="button" onclick="fsAddRow('priceRange')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة منتج</button>
+
+                                            <label class="block text-xs text-[#002d5d] font-bold mt-3 mb-2">السعر التاريخي والمقترح</label>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                    <thead class="bg-gray-50"><tr><th class="p-2 text-right">المنتج</th><th class="p-2 text-right">2021</th><th class="p-2 text-right">2022</th><th class="p-2 text-right">2023</th><th class="p-2 text-right bg-green-50">المقترح</th><th class="p-2 w-10"></th></tr></thead>
+                                                    <tbody id="tbl-priceHist"></tbody>
+                                                </table>
+                                            </div>
+                                            <button type="button" onclick="fsAddRow('priceHist')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة صف</button>
+                                        </div>
+
+                                        <!-- 2.6 Sales projections -->
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٢.٦ توقعات المبيعات وحصة السوق (٥ سنوات)</label>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-[10px] border border-gray-200 rounded">
+                                                    <thead class="bg-gray-50">
+                                                        <tr><th rowspan="2" class="p-2 text-right">المنتج</th><th rowspan="2" class="p-2 text-right">الوحدة</th><th colspan="2" class="p-1 text-center border-x border-gray-200">سنة 1</th><th colspan="2" class="p-1 text-center border-x border-gray-200">سنة 2</th><th colspan="2" class="p-1 text-center border-x border-gray-200">سنة 3</th><th colspan="2" class="p-1 text-center border-x border-gray-200">سنة 4</th><th colspan="2" class="p-1 text-center border-x border-gray-200">سنة 5</th><th rowspan="2" class="p-2 w-8"></th></tr>
+                                                        <tr><th class="p-1">محلي</th><th class="p-1">تصدير</th><th class="p-1">محلي</th><th class="p-1">تصدير</th><th class="p-1">محلي</th><th class="p-1">تصدير</th><th class="p-1">محلي</th><th class="p-1">تصدير</th><th class="p-1">محلي</th><th class="p-1">تصدير</th></tr>
+                                                    </thead>
+                                                    <tbody id="tbl-salesProj"></tbody>
+                                                </table>
+                                            </div>
+                                            <button type="button" onclick="fsAddRow('salesProj')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة منتج</button>
+                                            <div class="mt-3 flex items-center gap-2">
+                                                <label class="text-[11px] text-gray-600 flex items-center gap-2"><input type="checkbox" data-fs="m.isExpansion" onchange="fsOnInput()"> هل هذا مشروع توسعة؟</label>
                                             </div>
                                         </div>
-                                        <div>
-                                            <label class="block text-xs text-gray-500 font-bold mb-1">الوظائف المتوقعة</label>
-                                            <div class="flex border border-gray-200 rounded-lg overflow-hidden focus-within:border-green-500">
-                                                <input type="number" id="tmpl-jobs" oninput="updatePreview()" placeholder="0" min="0"
-                                                       class="flex-1 px-3 py-2 text-sm outline-none" style="text-align:right">
-                                                <span class="bg-gray-50 px-2 text-[10px] text-gray-400 flex items-center border-r border-gray-100">وظيفة</span>
+
+                                        <!-- 2.7 Competition -->
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٢.٧ المنافسة</label>
+                                            <textarea data-fs="m.compOverview" oninput="fsOnInput()" rows="2" placeholder="نظرة عامة على المنافسة..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-2" style="text-align:right"></textarea>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                    <thead class="bg-gray-50"><tr><th class="p-2 text-right">المنافس</th><th class="p-2 text-right">النوع</th><th class="p-2 text-right">جهة الاتصال</th><th class="p-2 text-right">الهاتف</th><th class="p-2 text-right">الحصة %</th><th class="p-2 w-10"></th></tr></thead>
+                                                    <tbody id="tbl-competitors"></tbody>
+                                                </table>
+                                            </div>
+                                            <button type="button" onclick="fsAddRow('competitors')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة منافس</button>
+                                        </div>
+
+                                        <!-- 2.8 Channels -->
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٢.٨ القطاعات وقنوات التوزيع</label>
+                                            <textarea data-fs="m.channels" oninput="fsOnInput()" rows="2" placeholder="كيف تصل المنتجات للمستهلك..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-2" style="text-align:right"></textarea>
+                                            <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                <thead class="bg-gray-50"><tr><th class="p-2 text-right">العنصر</th><th class="p-2 text-right">العدد</th></tr></thead>
+                                                <tbody>
+                                                    <tr><td class="p-2 border-t border-gray-200">عدد الشاحنات</td><td class="p-1 border-t border-gray-200"><input type="number" data-fs="m.df_trucks" oninput="fsOnInput()" class="fs-input w-full border border-gray-200 rounded px-2 py-1 text-xs"></td></tr>
+                                                    <tr><td class="p-2 border-t border-gray-200">عدد مندوبي المبيعات</td><td class="p-1 border-t border-gray-200"><input type="number" data-fs="m.df_reps" oninput="fsOnInput()" class="fs-input w-full border border-gray-200 rounded px-2 py-1 text-xs"></td></tr>
+                                                    <tr><td class="p-2 border-t border-gray-200">صالات العرض</td><td class="p-1 border-t border-gray-200"><input type="number" data-fs="m.df_showrooms" oninput="fsOnInput()" class="fs-input w-full border border-gray-200 rounded px-2 py-1 text-xs"></td></tr>
+                                                    <tr><td class="p-2 border-t border-gray-200">الإنفاق السنوي على التسويق (ر.س)</td><td class="p-1 border-t border-gray-200"><input type="number" data-fs="m.df_marketing" oninput="fsOnInput()" class="fs-input w-full border border-gray-200 rounded px-2 py-1 text-xs"></td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <!-- 2.9 Marketing budget -->
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٢.٩ دعم المبيعات والتسويق</label>
+                                            <textarea data-fs="m.adPlan" oninput="fsOnInput()" rows="2" placeholder="خطط الإعلان والترويج..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-2" style="text-align:right"></textarea>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                    <thead class="bg-gray-50"><tr><th class="p-2 text-right">الوسيلة الإعلامية</th><th class="p-2 text-right">الميزانية (ر.س)</th><th class="p-2 text-right">النسبة %</th><th class="p-2 w-10"></th></tr></thead>
+                                                    <tbody id="tbl-mediaBudget"></tbody>
+                                                </table>
+                                            </div>
+                                            <button type="button" onclick="fsAddRow('mediaBudget')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة بند</button>
+                                        </div>
+
+                                        <!-- 2.10 Marketing agreements -->
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٢.١٠ اتفاقيات التسويق</label>
+                                            <input type="file" multiple class="block w-full text-[11px] text-gray-500 file:bg-gray-50 file:border-0 file:px-3 file:py-1.5 file:rounded file:text-[11px] file:font-bold file:text-[#16a34a] mb-2">
+                                            <textarea data-fs="m.agreements" oninput="fsOnInput()" rows="2" placeholder="تفاصيل دور الشركاء..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none" style="text-align:right"></textarea>
+                                        </div>
+                                    </div>
+
+                                    <!-- ════════════════════════════════════ SECTION 3: الدراسة الفنية ════════════════════════════════════ -->
+                                    <div id="fs-section-s3" class="fs-section hidden">
+                                        <h3 class="fs-h text-[#002d5d] font-bold text-sm border-r-4 border-[#16a34a] pr-2 mb-4">٣. الدراسة الفنية</h3>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٣.١ عملية التصنيع</label>
+                                            <textarea data-fs="s3.process" oninput="fsOnInput()" rows="3" placeholder="وصف عملية التصنيع لكل منتج..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-2" style="text-align:right"></textarea>
+                                            <input type="file" class="block w-full text-[11px] text-gray-500 file:bg-gray-50 file:border-0 file:px-3 file:py-1.5 file:rounded file:text-[11px] file:font-bold file:text-[#16a34a]">
+                                            <p class="text-[10px] text-gray-400 mt-1">مخطط تدفق العملية (اختياري)</p>
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٣.٢ الطاقة الإنتاجية المركبة</label>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                    <thead class="bg-gray-50"><tr><th class="p-2 text-right">المنتج</th><th class="p-2 text-right">إنتاج/ساعة</th><th class="p-2 text-right">ساعات/يوم</th><th class="p-2 text-right">أيام/سنة</th><th class="p-2 text-right bg-green-50">الطاقة السنوية</th><th class="p-2 w-10"></th></tr></thead>
+                                                    <tbody id="tbl-capacity"></tbody>
+                                                    <tfoot><tr class="bg-gray-50 font-bold"><td colspan="4" class="p-2 text-right">الإجمالي الكلي</td><td class="p-2 text-right" id="cap-total">0</td><td></td></tr></tfoot>
+                                                </table>
+                                            </div>
+                                            <button type="button" onclick="fsAddRow('capacity')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة منتج</button>
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٣.٣ الآلات والمعدات</label>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                    <thead class="bg-gray-50"><tr><th class="p-2 text-right">المعدة</th><th class="p-2 text-right">المورد/البلد</th><th class="p-2 text-right">الكمية</th><th class="p-2 text-right">تكلفة الوحدة</th><th class="p-2 text-right bg-green-50">الإجمالي</th><th class="p-2 w-10"></th></tr></thead>
+                                                    <tbody id="tbl-machinery"></tbody>
+                                                    <tfoot><tr class="bg-gray-50 font-bold"><td colspan="4" class="p-2 text-right">الإجمالي العام (ر.س)</td><td class="p-2 text-right" id="mach-total">0</td><td></td></tr></tfoot>
+                                                </table>
+                                            </div>
+                                            <button type="button" onclick="fsAddRow('machinery')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة معدة</button>
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٣.٤ المباني والأعمال المدنية</label>
+                                            <p class="text-[10px] text-gray-400 mb-1">المساحة المبنية</p>
+                                            <table class="w-full text-[11px] border border-gray-200 rounded mb-3">
+                                                <thead class="bg-gray-50"><tr><th class="p-2 text-right">المبنى</th><th class="p-2 text-right">المساحة (م²)</th><th class="p-2 w-10"></th></tr></thead>
+                                                <tbody id="tbl-buildings"></tbody>
+                                            </table>
+                                            <button type="button" onclick="fsAddRow('buildings')" class="text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline mb-3"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة مبنى</button>
+                                            <textarea data-fs="s3.buildingNotes" oninput="fsOnInput()" rows="2" placeholder="المتطلبات المتخصصة (تحكم بالحرارة، تهوية، السلامة)..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-2" style="text-align:right"></textarea>
+                                            <textarea data-fs="s3.buildingMaterials" oninput="fsOnInput()" rows="2" placeholder="مواد وتقنيات البناء..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-3" style="text-align:right"></textarea>
+                                            <p class="text-[10px] text-gray-400 mb-1">تكلفة المباني</p>
+                                            <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                <thead class="bg-gray-50"><tr><th class="p-2 text-right">البند</th><th class="p-2 text-right">التكلفة (ر.س)</th><th class="p-2 w-10"></th></tr></thead>
+                                                <tbody id="tbl-buildingCosts"></tbody>
+                                                <tfoot><tr class="bg-gray-50 font-bold"><td class="p-2 text-right">إجمالي تكلفة المباني</td><td class="p-2 text-right" id="bldg-total">0</td><td></td></tr></tfoot>
+                                            </table>
+                                            <button type="button" onclick="fsAddRow('buildingCosts')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة بند</button>
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٣.٥ معدات السلامة</label>
+                                            <textarea data-fs="s3.hazards" oninput="fsOnInput()" rows="2" placeholder="المخاطر المتوقعة والأثر البيئي..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-2" style="text-align:right"></textarea>
+                                            <textarea data-fs="s3.hse" oninput="fsOnInput()" rows="2" placeholder="متطلبات الصحة والسلامة والبيئة..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-2" style="text-align:right"></textarea>
+                                            <label class="block text-[11px] text-gray-500 font-bold mb-1">التكلفة الإجمالية لمعدات السلامة (ر.س)</label>
+                                            <input type="number" data-fs="s3.safetyCost" oninput="fsOnInput()" class="fs-input w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs">
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٣.٦ المركبات</label>
+                                            <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                <thead class="bg-gray-50"><tr><th class="p-2 text-right">النوع</th><th class="p-2 text-right">الغرض</th><th class="p-2 text-right">الكمية</th><th class="p-2 text-right">التكلفة (ر.س)</th><th class="p-2 w-10"></th></tr></thead>
+                                                <tbody id="tbl-vehicles"></tbody>
+                                                <tfoot><tr class="bg-gray-50 font-bold"><td colspan="3" class="p-2 text-right">الإجمالي</td><td class="p-2 text-right" id="veh-total">0</td><td></td></tr></tfoot>
+                                            </table>
+                                            <button type="button" onclick="fsAddRow('vehicles')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة مركبة</button>
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٣.٧ الأثاث ومعدات تقنية المعلومات</label>
+                                            <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                <thead class="bg-gray-50"><tr><th class="p-2 text-right">البند</th><th class="p-2 text-right">الكمية</th><th class="p-2 text-right">التكلفة (ر.س)</th><th class="p-2 w-10"></th></tr></thead>
+                                                <tbody id="tbl-furniture"></tbody>
+                                                <tfoot><tr class="bg-gray-50 font-bold"><td colspan="2" class="p-2 text-right">الإجمالي</td><td class="p-2 text-right" id="furn-total">0</td><td></td></tr></tfoot>
+                                            </table>
+                                            <button type="button" onclick="fsAddRow('furniture')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة بند</button>
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="text-xs text-[#002d5d] font-bold mb-2 flex items-center gap-2">
+                                                ٣.٨ اتفاقيات المعرفة الفنية والترخيص
+                                                <input type="checkbox" data-fs="s3.hasLicensing" onchange="fsToggleLicensing()" class="ml-2"> <span class="text-[11px] text-gray-500 font-normal">يحتاج المشروع لاتفاقية ترخيص</span>
+                                            </label>
+                                            <div id="fs-licensing-block" class="hidden space-y-2">
+                                                <textarea data-fs="s3.licScope" oninput="fsOnInput()" rows="2" placeholder="نطاق الاتفاقية..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none" style="text-align:right"></textarea>
+                                                <textarea data-fs="s3.licParties" oninput="fsOnInput()" rows="2" placeholder="الأطراف المعنية..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none" style="text-align:right"></textarea>
+                                                <input type="number" data-fs="s3.licCost" oninput="fsOnInput()" placeholder="التكاليف المرتبطة (ر.س)" class="fs-input w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs">
+                                            </div>
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٣.٩ مصاريف ما قبل التشغيل</label>
+                                            <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                <thead class="bg-gray-50"><tr><th class="p-2 text-right">نوع المصروف</th><th class="p-2 text-right">التكلفة (ر.س)</th><th class="p-2 w-10"></th></tr></thead>
+                                                <tbody id="tbl-preOp"></tbody>
+                                                <tfoot><tr class="bg-gray-50 font-bold"><td class="p-2 text-right">الإجمالي</td><td class="p-2 text-right" id="preop-total">0</td><td></td></tr></tfoot>
+                                            </table>
+                                            <button type="button" onclick="fsAddRow('preOp')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة مصروف</button>
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٣.١٠ القوى العاملة</label>
+                                            <p class="text-[10px] text-gray-400 mb-1">عمالة مباشرة</p>
+                                            <table class="w-full text-[11px] border border-gray-200 rounded mb-2">
+                                                <thead class="bg-gray-50"><tr><th class="p-2 text-right">المنصب</th><th class="p-2 text-right">العدد</th><th class="p-2 text-right">الراتب الشهري</th><th class="p-2 text-right bg-green-50">الإجمالي الشهري</th><th class="p-2 w-10"></th></tr></thead>
+                                                <tbody id="tbl-directLabor"></tbody>
+                                                <tfoot><tr class="bg-gray-50 font-bold"><td colspan="3" class="p-2 text-right">الإجمالي</td><td class="p-2 text-right" id="dlab-total">0</td><td></td></tr></tfoot>
+                                            </table>
+                                            <button type="button" onclick="fsAddRow('directLabor')" class="text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline mb-3"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة منصب</button>
+                                            <p class="text-[10px] text-gray-400 mb-1">عمالة غير مباشرة</p>
+                                            <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                <thead class="bg-gray-50"><tr><th class="p-2 text-right">المنصب</th><th class="p-2 text-right">العدد</th><th class="p-2 text-right">الراتب الشهري</th><th class="p-2 text-right bg-green-50">الإجمالي الشهري</th><th class="p-2 w-10"></th></tr></thead>
+                                                <tbody id="tbl-indirectLabor"></tbody>
+                                                <tfoot><tr class="bg-gray-50 font-bold"><td colspan="3" class="p-2 text-right">الإجمالي</td><td class="p-2 text-right" id="ilab-total">0</td><td></td></tr></tfoot>
+                                            </table>
+                                            <button type="button" onclick="fsAddRow('indirectLabor')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة منصب</button>
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٣.١١ المواد الخام</label>
+                                            <input type="text" data-fs="s3.rawProductName" oninput="fsOnInput()" placeholder="اسم المنتج" class="fs-input w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs mb-2">
+                                            <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                <thead class="bg-gray-50"><tr><th class="p-2 text-right">المادة</th><th class="p-2 text-right">الكمية/وحدة</th><th class="p-2 text-right">تكلفة الوحدة</th><th class="p-2 text-right bg-green-50">الإجمالي</th><th class="p-2 text-right">المصدر</th><th class="p-2 w-10"></th></tr></thead>
+                                                <tbody id="tbl-rawMaterials"></tbody>
+                                            </table>
+                                            <button type="button" onclick="fsAddRow('rawMaterials')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة مادة</button>
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٣.١٢ المرافق</label>
+                                            <textarea data-fs="s3.utilTypes" oninput="fsOnInput()" rows="2" placeholder="أنواع المرافق المطلوبة (كهرباء، ماء، غاز...)" class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-2" style="text-align:right"></textarea>
+                                            <textarea data-fs="s3.utilPlan" oninput="fsOnInput()" rows="2" placeholder="خطة التزويد..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-2" style="text-align:right"></textarea>
+                                            <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                <thead class="bg-gray-50"><tr><th class="p-2 text-right">المرفق</th><th class="p-2 text-right">الاستهلاك السنوي</th><th class="p-2 text-right">التكلفة السنوية (ر.س)</th><th class="p-2 w-10"></th></tr></thead>
+                                                <tbody id="tbl-utilities"></tbody>
+                                            </table>
+                                            <button type="button" onclick="fsAddRow('utilities')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة مرفق</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- ════════════════════════════════════ SECTION 4: الدراسة المالية ════════════════════════════════════ -->
+                                    <div id="fs-section-s4" class="fs-section hidden">
+                                        <h3 class="fs-h text-[#002d5d] font-bold text-sm border-r-4 border-[#16a34a] pr-2 mb-4">٤. الدراسة المالية</h3>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٤.١ إجمالي التكلفة الرأسمالية</label>
+                                            <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                <thead class="bg-gray-50"><tr><th class="p-2 text-right">البند</th><th class="p-2 text-right">المصدر</th><th class="p-2 text-right">التكلفة (ر.س)</th></tr></thead>
+                                                <tbody>
+                                                    <tr><td class="p-2 border-t border-gray-200">الأرض</td><td class="p-2 border-t border-gray-200 text-[10px] text-gray-400">يدوي</td><td class="p-1 border-t border-gray-200"><input type="number" data-fs="s4.landCost" oninput="fsOnInput()" class="fs-input w-full border border-gray-200 rounded px-2 py-1 text-xs"></td></tr>
+                                                    <tr><td class="p-2 border-t border-gray-200">الآلات والمعدات</td><td class="p-2 border-t border-gray-200 text-[10px] text-gray-400">آلي من ٣.٣</td><td class="p-2 border-t border-gray-200 font-bold" id="cap-mach">0</td></tr>
+                                                    <tr><td class="p-2 border-t border-gray-200">المباني والأعمال المدنية</td><td class="p-2 border-t border-gray-200 text-[10px] text-gray-400">آلي من ٣.٤</td><td class="p-2 border-t border-gray-200 font-bold" id="cap-bldg">0</td></tr>
+                                                    <tr><td class="p-2 border-t border-gray-200">معدات السلامة</td><td class="p-2 border-t border-gray-200 text-[10px] text-gray-400">آلي من ٣.٥</td><td class="p-2 border-t border-gray-200 font-bold" id="cap-safety">0</td></tr>
+                                                    <tr><td class="p-2 border-t border-gray-200">المركبات</td><td class="p-2 border-t border-gray-200 text-[10px] text-gray-400">آلي من ٣.٦</td><td class="p-2 border-t border-gray-200 font-bold" id="cap-veh">0</td></tr>
+                                                    <tr><td class="p-2 border-t border-gray-200">الأثاث وتقنية المعلومات</td><td class="p-2 border-t border-gray-200 text-[10px] text-gray-400">آلي من ٣.٧</td><td class="p-2 border-t border-gray-200 font-bold" id="cap-furn">0</td></tr>
+                                                    <tr><td class="p-2 border-t border-gray-200">اتفاقيات المعرفة والترخيص</td><td class="p-2 border-t border-gray-200 text-[10px] text-gray-400">آلي من ٣.٨</td><td class="p-2 border-t border-gray-200 font-bold" id="cap-lic">0</td></tr>
+                                                    <tr><td class="p-2 border-t border-gray-200">مصاريف ما قبل التشغيل</td><td class="p-2 border-t border-gray-200 text-[10px] text-gray-400">آلي من ٣.٩</td><td class="p-2 border-t border-gray-200 font-bold" id="cap-preop">0</td></tr>
+                                                </tbody>
+                                                <tfoot><tr class="bg-green-50 font-bold"><td colspan="2" class="p-2 text-right text-[#16a34a]">إجمالي تكلفة المشروع (ر.س)</td><td class="p-2 text-right text-[#16a34a]" id="cap-grand-total">0</td></tr></tfoot>
+                                            </table>
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٤.٢ إجمالي التكاليف التشغيلية (٥ سنوات)</label>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                    <thead class="bg-gray-50"><tr><th class="p-2 text-right">البند</th><th class="p-2 text-right">سنة 1</th><th class="p-2 text-right">سنة 2</th><th class="p-2 text-right">سنة 3</th><th class="p-2 text-right">سنة 4</th><th class="p-2 text-right">سنة 5</th><th class="p-2 w-10"></th></tr></thead>
+                                                    <tbody id="tbl-opCosts"></tbody>
+                                                    <tfoot><tr class="bg-gray-50 font-bold"><td class="p-2 text-right">إجمالي السنة</td><td class="p-2 text-right" id="op-y1">0</td><td class="p-2 text-right" id="op-y2">0</td><td class="p-2 text-right" id="op-y3">0</td><td class="p-2 text-right" id="op-y4">0</td><td class="p-2 text-right" id="op-y5">0</td><td></td></tr></tfoot>
+                                                </table>
+                                            </div>
+                                            <button type="button" onclick="fsAddRow('opCosts')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة بند</button>
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٤.٣ النموذج المالي</label>
+                                            <input type="file" accept=".xlsx,.xls" class="block w-full text-[11px] text-gray-500 file:bg-gray-50 file:border-0 file:px-3 file:py-1.5 file:rounded file:text-[11px] file:font-bold file:text-[#16a34a] mb-3">
+                                            <textarea data-fs="s4.pnl" oninput="fsOnInput()" rows="2" placeholder="ملخص بيان الأرباح والخسائر..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-2" style="text-align:right"></textarea>
+                                            <textarea data-fs="s4.cash" oninput="fsOnInput()" rows="2" placeholder="ملخص التدفق النقدي..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-3" style="text-align:right"></textarea>
+                                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                <div><label class="block text-[10px] text-gray-500 font-bold mb-1">العائد على الاستثمار %</label><input type="number" step="0.1" data-fs="s4.roi" oninput="fsOnInput()" class="fs-input w-full border border-gray-200 rounded px-2 py-1 text-xs"></div>
+                                                <div><label class="block text-[10px] text-gray-500 font-bold mb-1">فترة الاسترداد (سنوات)</label><input type="number" step="0.1" data-fs="s4.payback" oninput="fsOnInput()" class="fs-input w-full border border-gray-200 rounded px-2 py-1 text-xs"></div>
+                                                <div><label class="block text-[10px] text-gray-500 font-bold mb-1">صافي القيمة الحالية (ر.س)</label><input type="number" data-fs="s4.npv" oninput="fsOnInput()" class="fs-input w-full border border-gray-200 rounded px-2 py-1 text-xs"></div>
+                                                <div><label class="block text-[10px] text-gray-500 font-bold mb-1">معدل العائد الداخلي %</label><input type="number" step="0.1" data-fs="s4.irr" oninput="fsOnInput()" class="fs-input w-full border border-gray-200 rounded px-2 py-1 text-xs"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٤.٤ تحليل الحساسية وتقييم المخاطر</label>
+                                            <textarea data-fs="s4.sens" oninput="fsOnInput()" rows="2" placeholder="تحليل الحساسية تحت سيناريوهات مختلفة..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-2" style="text-align:right"></textarea>
+                                            <textarea data-fs="s4.critVars" oninput="fsOnInput()" rows="2" placeholder="المتغيرات الحرجة وأثرها..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mb-2" style="text-align:right"></textarea>
+                                            <textarea data-fs="s4.riskMit" oninput="fsOnInput()" rows="3" placeholder="المخاطر المالية واستراتيجيات التخفيف (سوق، تشغيل، تنظيم، مالية)..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none" style="text-align:right"></textarea>
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٤.٥ خطة التمويل</label>
+                                            <table class="w-full text-[11px] border border-gray-200 rounded">
+                                                <thead class="bg-gray-50"><tr><th class="p-2 text-right">المصدر</th><th class="p-2 text-right">النسبة %</th><th class="p-2 text-right">المبلغ (ر.س)</th></tr></thead>
+                                                <tbody id="tbl-financing"></tbody>
+                                                <tfoot>
+                                                    <tr class="bg-gray-50 font-bold"><td class="p-2 text-right">الإجمالي</td><td class="p-2 text-right" id="fin-pct-total">0%</td><td class="p-2 text-right" id="fin-amt-total">0</td></tr>
+                                                    <tr id="fin-warning" class="hidden"><td colspan="3" class="p-2 bg-red-50 text-red-600 text-[10px] text-center font-bold">يجب أن يكون مجموع النسب 100%</td></tr>
+                                                </tfoot>
+                                            </table>
+                                            <textarea data-fs="s4.repayTerms" oninput="fsOnInput()" rows="2" placeholder="شروط السداد ومعدلات الفائدة..." class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none mt-3" style="text-align:right"></textarea>
+                                            <label class="block text-[11px] text-gray-500 font-bold mt-2 mb-1">جدول السداد</label>
+                                            <input type="date" data-fs="s4.repayDate" oninput="fsOnInput()" class="fs-input w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs">
+                                        </div>
+
+                                        <div class="fs-sub mb-4 p-4 border border-gray-100 rounded-lg">
+                                            <label class="block text-xs text-[#002d5d] font-bold mb-2">٤.٦ خطة السيولة (ربعي)</label>
+                                            <div class="overflow-x-auto">
+                                                <table class="w-full text-[10px] border border-gray-200 rounded">
+                                                    <thead class="bg-gray-50">
+                                                        <tr><th rowspan="2" class="p-1 text-right">المصدر</th><th colspan="4" class="p-1 text-center border-x border-gray-200">السنة 1</th><th colspan="4" class="p-1 text-center border-x border-gray-200">السنة 2</th><th rowspan="2" class="p-1 bg-green-50">المجموع</th></tr>
+                                                        <tr><th class="p-1">ر1</th><th class="p-1">ر2</th><th class="p-1">ر3</th><th class="p-1">ر4</th><th class="p-1">ر1</th><th class="p-1">ر2</th><th class="p-1">ر3</th><th class="p-1">ر4</th></tr>
+                                                    </thead>
+                                                    <tbody id="tbl-liquidity"></tbody>
+                                                </table>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="mb-4">
-                                        <label class="block text-xs text-gray-500 font-bold mb-1">ملخص المشروع</label>
-                                        <textarea id="tmpl-summary" oninput="updatePreview()" rows="3" placeholder="اكتب ملخصاً عن المشروع..."
-                                                  class="w-full border border-gray-200 rounded-lg p-3 text-sm outline-none focus:border-green-500 resize-none" style="text-align:right"></textarea>
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label class="block text-xs text-gray-500 font-bold mb-1">الأهداف والغايات</label>
-                                        <textarea id="tmpl-objectives" oninput="updatePreview()" rows="3" placeholder="حدد أهداف المشروع الرئيسية..."
-                                                  class="w-full border border-gray-200 rounded-lg p-3 text-sm outline-none focus:border-green-500 resize-none" style="text-align:right"></textarea>
-                                    </div>
-
-                                    <div class="mb-2">
-                                        <label class="block text-xs text-gray-500 font-bold mb-1">الوصف الفني</label>
-                                        <textarea id="tmpl-technical" oninput="updatePreview()" rows="3" placeholder="اشرح الجوانب الفنية للمشروع..."
-                                                  class="w-full border border-gray-200 rounded-lg p-3 text-sm outline-none focus:border-green-500 resize-none" style="text-align:right"></textarea>
-                                    </div>
                                 </div>
 
-                                <!-- LIVE PDF PREVIEW (left side in RTL) -->
+                                <!-- LIVE PDF PREVIEW (40%) -->
                                 <div class="w-full lg:w-[400px] lg:min-w-[400px] lg:shrink-0">
                                     <div class="flex items-center justify-between mb-2">
                                         <span class="text-[10px] text-gray-400 flex items-center gap-1">
-                                            <i data-lucide="file-text" class="w-3 h-3"></i> معاينة دراسة الجدوى (PDF)
+                                            <i data-lucide="file-text" class="w-3 h-3"></i> معاينة دراسة الجدوى
                                         </span>
-                                        <button onclick="window.print()" class="bg-[#002d5d] text-white px-3 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 hover:bg-[#001f42] transition-colors">
-                                            <i data-lucide="download" class="w-3 h-3"></i> تحميل PDF
-                                        </button>
+                                        <span class="text-[9px] text-gray-400">يتحدث تلقائياً</span>
                                     </div>
-                                    <div style="background:#525659;padding:16px;border-radius:8px;height:600px;overflow-y:auto;box-shadow:0 2px 12px rgba(0,0,0,0.12)">
-                                        <div id="pdf-preview" style="background:#fff;padding:28px 24px;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3);font-family:'Cairo',sans-serif;direction:rtl;color:#1f2937;font-size:11px;line-height:1.6">
-
+                                    <div id="fs-preview-shell" style="background:#525659;padding:16px;border-radius:8px;height:700px;overflow-y:auto;box-shadow:0 2px 12px rgba(0,0,0,0.12)">
+                                        <div id="pdf-preview" style="background:#fff;padding:28px 24px;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,0.3);font-family:'IBM Plex Sans Arabic','Cairo',sans-serif;direction:rtl;color:#1f2937;font-size:11px;line-height:1.6">
                                             <!-- Header -->
                                             <div style="text-align:center;border-bottom:2px solid #002d5d;padding-bottom:12px;margin-bottom:16px">
                                                 <div style="color:#002d5d;font-size:16px;font-weight:700">دراسة الجدوى</div>
@@ -619,45 +1064,11 @@
                                                 <div style="color:#9ca3af;font-size:8px;margin-top:2px" id="prev-date">—</div>
                                             </div>
 
-                                            <!-- Project Info -->
-                                            <div style="margin-bottom:14px">
-                                                <div style="color:#002d5d;font-weight:700;font-size:12px;border-right:3px solid #28a745;padding-right:6px;margin-bottom:8px">١. معلومات المشروع</div>
-                                                <table style="width:100%;font-size:10px;border-collapse:collapse">
-                                                    <tr><td style="padding:4px 0;color:#6b7280;width:90px">اسم المشروع:</td><td style="padding:4px 0;font-weight:700" id="prev-name">—</td></tr>
-                                                    <tr><td style="padding:4px 0;color:#6b7280">نوع المشروع:</td><td style="padding:4px 0;font-weight:700" id="prev-type">—</td></tr>
-                                                    <tr><td style="padding:4px 0;color:#6b7280">موقع المشروع:</td><td style="padding:4px 0;font-weight:700" id="prev-city">—</td></tr>
-                                                    <tr><td style="padding:4px 0;color:#6b7280">حجم الاستثمار:</td><td style="padding:4px 0;font-weight:700"><span id="prev-investment">—</span> <span style="color:#9ca3af;font-size:9px">ر.س</span></td></tr>
-                                                    <tr><td style="padding:4px 0;color:#6b7280">الوظائف المتوقعة:</td><td style="padding:4px 0;font-weight:700"><span id="prev-jobs">—</span> <span style="color:#9ca3af;font-size:9px">وظيفة</span></td></tr>
-                                                </table>
-                                            </div>
-
-                                            <!-- Summary -->
-                                            <div style="margin-bottom:14px">
-                                                <div style="color:#002d5d;font-weight:700;font-size:12px;border-right:3px solid #28a745;padding-right:6px;margin-bottom:6px">٢. ملخص المشروع</div>
-                                                <p id="prev-summary" style="font-size:10px;color:#9ca3af;text-align:justify;margin:0">لم يتم الإدخال بعد...</p>
-                                            </div>
-
-                                            <!-- Objectives -->
-                                            <div style="margin-bottom:14px">
-                                                <div style="color:#002d5d;font-weight:700;font-size:12px;border-right:3px solid #28a745;padding-right:6px;margin-bottom:6px">٣. الأهداف والغايات</div>
-                                                <p id="prev-objectives" style="font-size:10px;color:#9ca3af;text-align:justify;margin:0">لم يتم الإدخال بعد...</p>
-                                            </div>
-
-                                            <!-- Technical -->
-                                            <div style="margin-bottom:14px">
-                                                <div style="color:#002d5d;font-weight:700;font-size:12px;border-right:3px solid #28a745;padding-right:6px;margin-bottom:6px">٤. الوصف الفني</div>
-                                                <p id="prev-technical" style="font-size:10px;color:#9ca3af;text-align:justify;margin:0">لم يتم الإدخال بعد...</p>
-                                            </div>
-
-                                            <!-- Selected products -->
-                                            <div id="prev-products-wrap" style="display:none;margin-bottom:14px">
-                                                <div style="color:#002d5d;font-weight:700;font-size:12px;border-right:3px solid #28a745;padding-right:6px;margin-bottom:6px">٥. المنتجات والخدمات المطلوبة</div>
-                                                <div id="prev-products" style="display:flex;flex-wrap:wrap;gap:4px"></div>
-                                            </div>
+                                            <div id="prev-body"></div>
 
                                             <!-- Footer -->
                                             <div style="border-top:1px solid #e5e7eb;padding-top:8px;margin-top:20px;text-align:center;color:#9ca3af;font-size:8px">
-                                                وثيقة تم إنشاؤها تلقائياً — صفحة 1 من 1
+                                                وثيقة تم إنشاؤها تلقائياً — صفحة <span id="prev-page-cur">1</span> من <span id="prev-page-total">1</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1169,44 +1580,508 @@
             });
         }
 
-        function updatePreview() {
-            var fields = ['name','investment','jobs'];
-            fields.forEach(function(f) {
-                var el   = document.getElementById('tmpl-' + f);
-                var prev = document.getElementById('prev-' + f);
-                if (!el || !prev) return;
-                var val = el.value.trim();
-                prev.textContent = val || '—';
-                prev.style.color = val ? '#002d5d' : '#9ca3af';
+        // ═══════════════════════ FEASIBILITY STUDY ENGINE ═══════════════════════
+        const FS_KEY = 'sidfFsDraft_v1';
+
+        const fsTableSchemas = {
+            positions:     { market: false, cols: [{k:'pos',ph:'المنصب'},{k:'name',ph:'الاسم'},{k:'cv',ph:'',type:'file'}] },
+            milestones:    { market: false, cols: [{k:'phase',ph:'المرحلة'},{k:'start',ph:'',type:'date'},{k:'end',ph:'',type:'date'}] },
+            products:      { market: true,  cols: [{k:'name',ph:'المنتج'},{k:'brand',ph:'الاسم التجاري'},{k:'use',ph:'الاستخدام'},{k:'sizes',ph:'الأنواع/الأحجام'}] },
+            suppliers:     { market: true,  cols: [{k:'company',ph:'الشركة'},{k:'country',ph:'الدولة'},{k:'products',ph:'المنتجات'},{k:'capacity',ph:'السعة'},{k:'share',ph:'%',type:'number'},{k:'phone',ph:'الهاتف'}] },
+            demandHist:    { market: true,  cols: [{k:'year',ph:'',type:'number'},{k:'production',ph:'',type:'number'},{k:'imports',ph:'',type:'number'},{k:'exports',ph:'',type:'number'},{k:'total',ph:'',type:'number',ro:true}] },
+            demandFuture:  { market: true,  cols: [{k:'year',ph:'',type:'number'},{k:'demand',ph:'',type:'number'},{k:'assumptions',ph:'الافتراضات'}] },
+            priceRange:    { market: true,  cols: [{k:'product',ph:'المنتج'},{k:'avg',ph:'',type:'number'},{k:'export',ph:'',type:'number'}] },
+            priceHist:     { market: true,  cols: [{k:'product',ph:'المنتج'},{k:'p2021',ph:'',type:'number'},{k:'p2022',ph:'',type:'number'},{k:'p2023',ph:'',type:'number'},{k:'proposed',ph:'',type:'number'}] },
+            salesProj:     { market: true,  cols: [{k:'product',ph:'المنتج'},{k:'unit',ph:'الوحدة'},{k:'y1l',ph:'',type:'number'},{k:'y1e',ph:'',type:'number'},{k:'y2l',ph:'',type:'number'},{k:'y2e',ph:'',type:'number'},{k:'y3l',ph:'',type:'number'},{k:'y3e',ph:'',type:'number'},{k:'y4l',ph:'',type:'number'},{k:'y4e',ph:'',type:'number'},{k:'y5l',ph:'',type:'number'},{k:'y5e',ph:'',type:'number'}] },
+            competitors:   { market: true,  cols: [{k:'name',ph:'المنافس'},{k:'type',ph:'النوع'},{k:'contact',ph:'جهة الاتصال'},{k:'phone',ph:'الهاتف'},{k:'share',ph:'%',type:'number'}] },
+            mediaBudget:   { market: true,  cols: [{k:'media',ph:'الوسيلة'},{k:'budget',ph:'',type:'number'},{k:'percent',ph:'%',type:'number'}] },
+            capacity:      { market: false, cols: [{k:'product',ph:'المنتج'},{k:'rate',ph:'',type:'number'},{k:'hpd',ph:'',type:'number'},{k:'dpy',ph:'',type:'number'},{k:'annual',ph:'',type:'number',ro:true}] },
+            machinery:     { market: false, cols: [{k:'name',ph:'المعدة'},{k:'supplier',ph:'المورد/البلد'},{k:'qty',ph:'',type:'number'},{k:'unitCost',ph:'',type:'number'},{k:'total',ph:'',type:'number',ro:true}] },
+            buildings:     { market: false, cols: [{k:'building',ph:'المبنى'},{k:'area',ph:'',type:'number'}] },
+            buildingCosts: { market: false, cols: [{k:'item',ph:'البند'},{k:'cost',ph:'',type:'number'}] },
+            vehicles:      { market: false, cols: [{k:'type',ph:'النوع'},{k:'purpose',ph:'الغرض'},{k:'qty',ph:'',type:'number'},{k:'cost',ph:'',type:'number'}] },
+            furniture:     { market: false, cols: [{k:'item',ph:'البند'},{k:'qty',ph:'',type:'number'},{k:'cost',ph:'',type:'number'}] },
+            preOp:         { market: false, cols: [{k:'type',ph:'نوع المصروف'},{k:'cost',ph:'',type:'number'}] },
+            directLabor:   { market: false, cols: [{k:'pos',ph:'المنصب'},{k:'count',ph:'',type:'number'},{k:'salary',ph:'',type:'number'},{k:'total',ph:'',type:'number',ro:true}] },
+            indirectLabor: { market: false, cols: [{k:'pos',ph:'المنصب'},{k:'count',ph:'',type:'number'},{k:'salary',ph:'',type:'number'},{k:'total',ph:'',type:'number',ro:true}] },
+            rawMaterials:  { market: false, cols: [{k:'mat',ph:'المادة'},{k:'qty',ph:'',type:'number'},{k:'unitCost',ph:'',type:'number'},{k:'total',ph:'',type:'number',ro:true},{k:'source',ph:'المصدر'}] },
+            utilities:     { market: false, cols: [{k:'name',ph:'المرفق'},{k:'consumption',ph:'الاستهلاك'},{k:'cost',ph:'',type:'number'}] },
+            opCosts:       { market: false, cols: [{k:'item',ph:'البند'},{k:'y1',ph:'',type:'number'},{k:'y2',ph:'',type:'number'},{k:'y3',ph:'',type:'number'},{k:'y4',ph:'',type:'number'},{k:'y5',ph:'',type:'number'}] },
+            financing:     { market: false, cols: [{k:'source',ph:'المصدر'},{k:'percent',ph:'%',type:'number'},{k:'amount',ph:'',type:'number'}] },
+            liquidity:     { market: false, cols: [{k:'source',ph:'المصدر'},{k:'y1q1',ph:'',type:'number'},{k:'y1q2',ph:'',type:'number'},{k:'y1q3',ph:'',type:'number'},{k:'y1q4',ph:'',type:'number'},{k:'y2q1',ph:'',type:'number'},{k:'y2q2',ph:'',type:'number'},{k:'y2q3',ph:'',type:'number'},{k:'y2q4',ph:'',type:'number'},{k:'total',ph:'',type:'number',ro:true}] }
+        };
+
+        const fsState = {
+            s1: { projectName:'', projectDesc:'', orgDesc:'', saudization:'', implStart:'', implEnd:'' },
+            s3: { process:'', buildingNotes:'', buildingMaterials:'', hazards:'', hse:'', safetyCost:0, hasLicensing:false, licScope:'', licParties:'', licCost:0, rawProductName:'', utilTypes:'', utilPlan:'' },
+            s4: { landCost:0, pnl:'', cash:'', roi:'', payback:'', npv:'', irr:'', sens:'', critVars:'', riskMit:'', repayTerms:'', repayDate:'' },
+            markets: {
+                local:  { productDesc:'', standards:'', productionPlan:'', supplySource:'', strategy:'', ownerExp:'', isExpansion:false, demandMethod:'', compOverview:'', channels:'', df_trucks:'', df_reps:'', df_showrooms:'', df_marketing:'', adPlan:'', agreements:'' },
+                gulf:   { productDesc:'', standards:'', productionPlan:'', supplySource:'', strategy:'', ownerExp:'', isExpansion:false, demandMethod:'', compOverview:'', channels:'', df_trucks:'', df_reps:'', df_showrooms:'', df_marketing:'', adPlan:'', agreements:'' },
+                export: { productDesc:'', standards:'', productionPlan:'', supplySource:'', strategy:'', ownerExp:'', isExpansion:false, demandMethod:'', compOverview:'', channels:'', df_trucks:'', df_reps:'', df_showrooms:'', df_marketing:'', adPlan:'', agreements:'' }
+            },
+            activeMarket: 'local',
+            currentSection: 's1',
+            rows: {},
+            marketRows: { local: {}, gulf: {}, export: {} },
+            lastSaved: null
+        };
+
+        function fsInitTables() {
+            Object.keys(fsTableSchemas).forEach(name => {
+                if (fsTableSchemas[name].market) {
+                    ['local','gulf','export'].forEach(m => { if (!fsState.marketRows[m][name]) fsState.marketRows[m][name] = []; });
+                } else {
+                    if (!fsState.rows[name]) fsState.rows[name] = [];
+                }
             });
+        }
 
-            var typeEl = document.getElementById('tmpl-type');
-            var cityEl = document.getElementById('tmpl-city');
-            var pt = document.getElementById('prev-type');
-            var pc = document.getElementById('prev-city');
-            if (typeEl && pt) { pt.textContent = typeEl.value || '—'; pt.style.color = typeEl.value ? '#002d5d' : '#9ca3af'; }
-            if (cityEl && pc) { pc.textContent = cityEl.value || '—'; pc.style.color = cityEl.value ? '#002d5d' : '#9ca3af'; }
+        function fsTableData(name) {
+            const sch = fsTableSchemas[name];
+            return sch.market ? fsState.marketRows[fsState.activeMarket][name] : fsState.rows[name];
+        }
 
-            ['summary','objectives','technical'].forEach(function(f) {
-                var val  = document.getElementById('tmpl-' + f).value;
-                var prev = document.getElementById('prev-' + f);
-                prev.textContent = val || 'لم يتم الإدخال بعد...';
-                prev.style.color = val ? '#374151' : '#9ca3af';
+        function fsSeedDefaults() {
+            ['local','gulf','export'].forEach(m => {
+                if (!fsState.marketRows[m].demandHist.length) [2020,2021,2022,2023,2024].forEach(y => fsState.marketRows[m].demandHist.push({year:y,production:'',imports:'',exports:'',total:0}));
+                if (!fsState.marketRows[m].demandFuture.length) [2025,2026,2027,2028,2029].forEach(y => fsState.marketRows[m].demandFuture.push({year:y,demand:'',assumptions:''}));
             });
+            if (!fsState.rows.buildings.length) [{building:'المبنى الرئيسي',area:''},{building:'المستودعات',area:''},{building:'الغرف الخارجية المساعدة',area:''}].forEach(r => fsState.rows.buildings.push(r));
+            if (!fsState.rows.buildingCosts.length) [{item:'الموقع العام (تسوية، أسوار، خزانات)',cost:''},{item:'المبنى الرئيسي',cost:''},{item:'المستودعات',cost:''},{item:'الغرف المساعدة',cost:''}].forEach(r => fsState.rows.buildingCosts.push(r));
+            if (!fsState.rows.preOp.length) ['أتعاب المعماريين','الاستشاريين','الخبراء القانونيين','دراسات الجدوى','الرواتب قبل التشغيل','مواد التشغيل التجريبي'].forEach(t => fsState.rows.preOp.push({type:t,cost:''}));
+            if (!fsState.rows.opCosts.length) ['إيجار الأرض','المواد الخام','القوى العاملة','المرافق','الصيانة','الإهلاك','الإطفاء'].forEach(item => fsState.rows.opCosts.push({item,y1:'',y2:'',y3:'',y4:'',y5:''}));
+            if (!fsState.rows.financing.length) ['رأس المال المدفوع','قرض صندوق التنمية الصناعية','قرض بنك تجاري','مصادر أخرى'].forEach(s => fsState.rows.financing.push({source:s,percent:'',amount:''}));
+            if (!fsState.rows.liquidity.length) ['رأس المال المدفوع','قرض الصندوق','قرض تجاري','قرض المساهمين التابع','أخرى'].forEach(s => fsState.rows.liquidity.push({source:s,y1q1:'',y1q2:'',y1q3:'',y1q4:'',y2q1:'',y2q2:'',y2q3:'',y2q4:'',total:0}));
+        }
 
-            var keys = Object.keys(selectedProducts);
-            var wrap = document.getElementById('prev-products-wrap');
-            var pp   = document.getElementById('prev-products');
-            if (keys.length) {
-                wrap.style.display = 'block';
-                pp.innerHTML = keys.map(function(k) {
-                    return '<span style="background:#002d5d;color:#fff;font-size:8.5px;font-weight:700;padding:2px 7px;border-radius:999px">' + selectedProducts[k] + '</span>';
+        function fsRenderTable(name) {
+            const tbody = document.getElementById('tbl-' + name);
+            if (!tbody) return;
+            const sch = fsTableSchemas[name];
+            const rows = fsTableData(name);
+            tbody.innerHTML = rows.map((row, i) => {
+                const cells = sch.cols.map(c => {
+                    if (c.type === 'file') return '<td class="p-1 border-t border-gray-200"><input type="file" class="text-[10px] w-full"></td>';
+                    const ro = c.ro ? 'readonly' : '';
+                    const val = row[c.k] != null ? row[c.k] : '';
+                    const inputType = c.type === 'date' ? 'date' : (c.type === 'number' ? 'number' : 'text');
+                    const cls = 'fs-input w-full border border-gray-200 rounded px-1.5 py-1 text-[11px]' + (c.ro ? ' bg-gray-50 text-gray-500' : '');
+                    return `<td class="p-1 border-t border-gray-200"><input type="${inputType}" value="${String(val).replace(/"/g,'&quot;')}" placeholder="${c.ph||''}" ${ro} oninput="fsCellEdit('${name}',${i},'${c.k}',this.value)" class="${cls}"></td>`;
                 }).join('');
-            } else {
-                wrap.style.display = 'none';
-                pp.innerHTML = '';
+                return `<tr>${cells}<td class="p-1 border-t border-gray-200 text-center"><button onclick="fsRemoveRow('${name}',${i})" class="text-gray-400 hover:text-red-500"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></td></tr>`;
+            }).join('');
+        }
+
+        function fsCellEdit(name, i, key, value) {
+            fsTableData(name)[i][key] = value;
+            fsRecalc();
+            fsRenderPreview();
+            fsScheduleSave();
+        }
+
+        function fsAddRow(name) {
+            const sch = fsTableSchemas[name];
+            const blank = {};
+            sch.cols.forEach(c => blank[c.k] = '');
+            fsTableData(name).push(blank);
+            fsRenderTable(name);
+            fsRecalc();
+            fsRenderPreview();
+            fsScheduleSave();
+        }
+
+        function fsRemoveRow(name, i) {
+            if (!confirm('هل تريد حذف هذا الصف؟')) return;
+            fsTableData(name).splice(i, 1);
+            fsRenderTable(name);
+            fsRecalc();
+            fsRenderPreview();
+            fsScheduleSave();
+        }
+
+        function fsFmt(n) { if (!n || isNaN(+n)) return '0'; return Number(n).toLocaleString('en-US'); }
+        function fsSet(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+
+        function fsRecalc() {
+            ['local','gulf','export'].forEach(m => {
+                fsState.marketRows[m].demandHist.forEach(r => { r.total = (+r.production||0) + (+r.imports||0) - (+r.exports||0); });
+            });
+            fsState.rows.capacity.forEach(r => { r.annual = (+r.rate||0) * (+r.hpd||0) * (+r.dpy||0); });
+            fsSet('cap-total', fsFmt(fsState.rows.capacity.reduce((s,r)=>s+(+r.annual||0),0)));
+            fsState.rows.machinery.forEach(r => { r.total = (+r.qty||0) * (+r.unitCost||0); });
+            const machTotal = fsState.rows.machinery.reduce((s,r)=>s+(+r.total||0),0);
+            fsSet('mach-total', fsFmt(machTotal));
+            const bldgTotal = fsState.rows.buildingCosts.reduce((s,r)=>s+(+r.cost||0),0);
+            fsSet('bldg-total', fsFmt(bldgTotal));
+            const vehTotal = fsState.rows.vehicles.reduce((s,r)=>s+(+r.cost||0)*(+r.qty||0),0);
+            fsSet('veh-total', fsFmt(vehTotal));
+            const furnTotal = fsState.rows.furniture.reduce((s,r)=>s+(+r.cost||0)*(+r.qty||0),0);
+            fsSet('furn-total', fsFmt(furnTotal));
+            const preopTotal = fsState.rows.preOp.reduce((s,r)=>s+(+r.cost||0),0);
+            fsSet('preop-total', fsFmt(preopTotal));
+            fsState.rows.directLabor.forEach(r => { r.total = (+r.count||0) * (+r.salary||0); });
+            fsState.rows.indirectLabor.forEach(r => { r.total = (+r.count||0) * (+r.salary||0); });
+            fsSet('dlab-total', fsFmt(fsState.rows.directLabor.reduce((s,r)=>s+(+r.total||0),0)));
+            fsSet('ilab-total', fsFmt(fsState.rows.indirectLabor.reduce((s,r)=>s+(+r.total||0),0)));
+            fsState.rows.rawMaterials.forEach(r => { r.total = (+r.qty||0) * (+r.unitCost||0); });
+            ['y1','y2','y3','y4','y5'].forEach(yk => fsSet('op-'+yk, fsFmt(fsState.rows.opCosts.reduce((s,r)=>s+(+r[yk]||0),0))));
+            const finPct = fsState.rows.financing.reduce((s,r)=>s+(+r.percent||0),0);
+            const finAmt = fsState.rows.financing.reduce((s,r)=>s+(+r.amount||0),0);
+            fsSet('fin-pct-total', finPct + '%');
+            fsSet('fin-amt-total', fsFmt(finAmt));
+            const warn = document.getElementById('fin-warning');
+            if (warn) warn.classList.toggle('hidden', Math.abs(finPct - 100) < 0.01);
+            const pctEl = document.getElementById('fin-pct-total');
+            if (pctEl) pctEl.style.color = (Math.abs(finPct - 100) < 0.01) ? '#16a34a' : '#dc2626';
+            fsState.rows.liquidity.forEach(r => { r.total = ['y1q1','y1q2','y1q3','y1q4','y2q1','y2q2','y2q3','y2q4'].reduce((s,k)=>s+(+r[k]||0),0); });
+            // Capital cost rollup
+            fsSet('cap-mach', fsFmt(machTotal));
+            fsSet('cap-bldg', fsFmt(bldgTotal));
+            fsSet('cap-safety', fsFmt(+fsState.s3.safetyCost||0));
+            fsSet('cap-veh', fsFmt(vehTotal));
+            fsSet('cap-furn', fsFmt(furnTotal));
+            fsSet('cap-lic', fsFmt(+fsState.s3.licCost||0));
+            fsSet('cap-preop', fsFmt(preopTotal));
+            const capGrand = (+fsState.s4.landCost||0) + machTotal + bldgTotal + (+fsState.s3.safetyCost||0) + vehTotal + furnTotal + (+fsState.s3.licCost||0) + preopTotal;
+            fsSet('cap-grand-total', fsFmt(capGrand));
+        }
+
+        function fsBindInputs() {
+            document.querySelectorAll('[data-fs]').forEach(el => {
+                const path = el.dataset.fs.split('.');
+                let target = path[0] === 'm' ? fsState.markets[fsState.activeMarket] : fsState[path[0]];
+                if (!target) return;
+                const k = path[path.length - 1];
+                const val = target[k];
+                if (el.type === 'checkbox') el.checked = !!val;
+                else el.value = val == null ? '' : val;
+            });
+        }
+
+        function fsOnInput() {
+            document.querySelectorAll('[data-fs]').forEach(el => {
+                const path = el.dataset.fs.split('.');
+                let target = path[0] === 'm' ? fsState.markets[fsState.activeMarket] : fsState[path[0]];
+                if (!target) return;
+                const k = path[path.length - 1];
+                if (el.type === 'checkbox') target[k] = el.checked;
+                else target[k] = el.value;
+            });
+            fsRecalc();
+            fsRenderPreview();
+            fsUpdateProgress();
+            fsScheduleSave();
+            if (typeof refreshUploadLock === 'function') refreshUploadLock();
+        }
+
+        function fsSetMarket(m) {
+            // Save current values from DOM first
+            document.querySelectorAll('[data-fs^="m."]').forEach(el => {
+                const k = el.dataset.fs.split('.')[1];
+                const t = fsState.markets[fsState.activeMarket];
+                if (el.type === 'checkbox') t[k] = el.checked; else t[k] = el.value;
+            });
+            fsState.activeMarket = m;
+            document.querySelectorAll('.fs-mtab').forEach(b => b.classList.toggle('active', b.dataset.market === m));
+            fsSet('fs-market-label', m === 'local' ? 'السوق المحلي' : (m === 'gulf' ? 'دول الخليج' : 'التصدير'));
+            // Re-render market tables
+            Object.keys(fsTableSchemas).forEach(n => { if (fsTableSchemas[n].market) fsRenderTable(n); });
+            // Re-bind market inputs
+            document.querySelectorAll('[data-fs^="m."]').forEach(el => {
+                const k = el.dataset.fs.split('.')[1];
+                const v = fsState.markets[m][k];
+                if (el.type === 'checkbox') el.checked = !!v;
+                else el.value = v == null ? '' : v;
+            });
+            fsRecalc();
+            fsRenderPreview();
+            fsScheduleSave();
+        }
+
+        function fsToggleLicensing() {
+            const cb = document.querySelector('[data-fs="s3.hasLicensing"]');
+            fsState.s3.hasLicensing = cb.checked;
+            document.getElementById('fs-licensing-block').classList.toggle('hidden', !cb.checked);
+            fsScheduleSave();
+        }
+
+        function fsShowSection(s) {
+            fsState.currentSection = s;
+            document.querySelectorAll('.fs-section').forEach(el => el.classList.toggle('hidden', el.id !== 'fs-section-' + s));
+            document.querySelectorAll('.fs-tab').forEach(el => el.classList.toggle('active', el.dataset.section === s));
+            const previewSec = document.getElementById('prev-' + s);
+            const shell = document.getElementById('fs-preview-shell');
+            if (previewSec && shell) {
+                shell.scrollTo({ top: previewSec.offsetTop - 16, behavior: 'smooth' });
             }
-            refreshUploadLock();
+        }
+
+        function fsPrev() { const o=['s1','s2','s3','s4'], i=o.indexOf(fsState.currentSection); if (i>0) fsShowSection(o[i-1]); }
+        function fsNext() { const o=['s1','s2','s3','s4'], i=o.indexOf(fsState.currentSection); if (i<o.length-1) fsShowSection(o[i+1]); }
+
+        function fsUpdateProgress() {
+            const filled = {
+                s1: !!(fsState.s1.projectName || fsState.s1.projectDesc),
+                s2: ['local','gulf','export'].some(m => Object.values(fsState.markets[m]).some(v => v && v !== false)) || ['local','gulf','export'].some(m => Object.values(fsState.marketRows[m]).some(arr => arr.some(r => Object.values(r).some(v => v && v !== 0)))),
+                s3: !!(fsState.s3.process || fsState.s3.safetyCost) || fsState.rows.machinery.some(r => r.name) || fsState.rows.directLabor.some(r => r.pos),
+                s4: !!(+fsState.s4.landCost || fsState.s4.pnl || +fsState.s4.roi || +fsState.s4.npv) || fsState.rows.financing.some(r => r.percent)
+            };
+            const count = Object.values(filled).filter(Boolean).length;
+            const pct = Math.round((count / 4) * 100);
+            const bar = document.getElementById('fs-progress-bar');
+            if (bar) bar.style.width = pct + '%';
+            fsSet('fs-progress-label', pct + '%');
+            ['s1','s2','s3','s4'].forEach(s => {
+                const tab = document.querySelector(`.fs-tab[data-section="${s}"]`);
+                if (!tab) return;
+                const check = tab.querySelector('.fs-tab-check');
+                const num = tab.querySelector('.fs-tab-num');
+                if (filled[s]) {
+                    check && check.classList.remove('hidden');
+                    if (num) { num.classList.remove('bg-gray-200','text-gray-500'); num.style.background='#16a34a'; num.style.color='#fff'; }
+                } else if (s !== fsState.currentSection) {
+                    check && check.classList.add('hidden');
+                    if (num) { num.style.background=''; num.style.color=''; num.classList.add('bg-gray-200','text-gray-500'); }
+                }
+            });
+        }
+
+        function fsRenderPreview() {
+            const body = document.getElementById('prev-body');
+            if (!body) return;
+            try { fsSet('prev-date', new Date().toLocaleDateString('ar-SA-u-ca-gregory')); } catch(e) { fsSet('prev-date', new Date().toLocaleDateString()); }
+            const blank = '— لم يتم الإدخال بعد';
+            const t = (v) => v && String(v).trim() ? String(v) : blank;
+            const sec = (id, title) => `<div id="prev-${id}" style="margin-bottom:14px;page-break-inside:avoid"><div style="color:#002d5d;font-weight:700;font-size:12px;border-right:3px solid #16a34a;padding-right:6px;margin-bottom:6px">${title}</div>`;
+            const para = (v) => `<p style="font-size:10px;color:${v && String(v).trim() ? '#374151' : '#9ca3af'};text-align:justify;margin:0 0 6px 0">${t(v)}</p>`;
+            const renderTbl = (rows, ks, hs) => {
+                if (!rows || !rows.length || !rows.some(r => Object.values(r).some(v => v && v !== 0))) return `<div style="font-size:9px;color:#9ca3af;font-style:italic">${blank}</div>`;
+                const ths = hs.map(h => `<th style="padding:4px;background:#f3f4f6;border:1px solid #e5e7eb;font-size:8.5px;color:#6b7280;text-align:right">${h}</th>`).join('');
+                const trs = rows.map(r => `<tr>${ks.map(k => `<td style="padding:4px;border:1px solid #e5e7eb;font-size:8.5px">${r[k] != null && r[k] !== '' ? r[k] : '—'}</td>`).join('')}</tr>`).join('');
+                return `<table style="width:100%;border-collapse:collapse;margin-bottom:6px"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+            };
+            const m = fsState.activeMarket;
+            const mLabel = m === 'local' ? 'السوق المحلي' : (m === 'gulf' ? 'دول الخليج' : 'التصدير');
+            const md = fsState.markets[m]; const mr = fsState.marketRows[m];
+            const sub = (n) => `<div style="font-size:10px;color:#002d5d;font-weight:600;margin:6px 0 3px 0">${n}</div>`;
+            const kv = (k, v) => `<div style="font-size:10px;margin-bottom:4px"><strong style="color:#6b7280">${k}:</strong> <span style="color:${v && String(v).trim() ? '#374151' : '#9ca3af'}">${t(v)}</span></div>`;
+            let html = '';
+
+            // ═══════ Section 1 — المقدمة ═══════
+            html += sec('s1','١. المقدمة');
+            html += sub('١.١ وصف المشروع');
+            html += kv('اسم المشروع', fsState.s1.projectName);
+            html += para(fsState.s1.projectDesc);
+            html += sub('١.٢ الهيكل التنظيمي');
+            html += para(fsState.s1.orgDesc);
+            html += renderTbl(fsState.rows.positions, ['pos','name'], ['المنصب','الاسم']);
+            html += `<div style="font-size:10px;margin-top:4px"><strong style="color:#6b7280">خطة التوطين:</strong></div>${para(fsState.s1.saudization)}`;
+            html += sub('١.٣ خطة تنفيذ المشروع');
+            html += `<div style="font-size:10px;margin-bottom:4px"><strong style="color:#6b7280">فترة التنفيذ:</strong> ${t(fsState.s1.implStart)} ← ${t(fsState.s1.implEnd)}</div>`;
+            html += renderTbl(fsState.rows.milestones, ['phase','start','end'], ['المرحلة','البداية','النهاية']);
+            html += `</div>`;
+
+            // ═══════ Section 2 — دراسة السوق ═══════
+            html += sec('s2', `٢. دراسة السوق — ${mLabel}`);
+            html += sub('٢.١ المنتجات');
+            html += renderTbl(mr.products, ['name','brand','use','sizes'], ['المنتج','الاسم التجاري','الاستخدام','الأنواع']);
+            html += `<div style="font-size:10px;margin-top:3px"><strong style="color:#6b7280">وصف المنتج:</strong></div>${para(md.productDesc)}`;
+            html += `<div style="font-size:10px"><strong style="color:#6b7280">المعايير:</strong></div>${para(md.standards)}`;
+            html += `<div style="font-size:10px"><strong style="color:#6b7280">برنامج الإنتاج:</strong></div>${para(md.productionPlan)}`;
+            html += sub('٢.٢ العرض');
+            html += `<div style="font-size:10px"><strong style="color:#6b7280">مصادر العرض:</strong></div>${para(md.supplySource)}`;
+            html += renderTbl(mr.suppliers, ['company','country','products','share'], ['الشركة','الدولة','المنتجات','الحصة %']);
+            html += sub('٢.٣ الطلب التاريخي');
+            html += renderTbl(mr.demandHist, ['year','production','imports','exports','total'], ['السنة','الإنتاج','الواردات','الصادرات','الإجمالي']);
+            html += sub('الطلب المتوقع');
+            html += renderTbl(mr.demandFuture, ['year','demand'], ['السنة','الطلب']);
+            html += `<div style="font-size:10px"><strong style="color:#6b7280">المنهجية:</strong></div>${para(md.demandMethod)}`;
+            html += sub('٢.٤ الاستراتيجية التسويقية');
+            html += para(md.strategy);
+            html += `<div style="font-size:10px"><strong style="color:#6b7280">خبرة المالك:</strong></div>${para(md.ownerExp)}`;
+            html += sub('٢.٥ التسعير');
+            html += renderTbl(mr.priceRange, ['product','avg','export'], ['المنتج','متوسط','تصدير']);
+            html += renderTbl(mr.priceHist, ['product','p2021','p2022','p2023','proposed'], ['المنتج','2021','2022','2023','المقترح']);
+            html += sub('٢.٦ توقعات المبيعات');
+            html += renderTbl(mr.salesProj, ['product','unit','y1l','y5l'], ['المنتج','الوحدة','س1 محلي','س5 محلي']);
+            html += sub('٢.٧ المنافسة');
+            html += para(md.compOverview);
+            html += renderTbl(mr.competitors, ['name','type','share'], ['المنافس','النوع','الحصة %']);
+            html += sub('٢.٨ القنوات');
+            html += para(md.channels);
+            html += sub('٢.٩ ميزانية الإعلان');
+            html += renderTbl(mr.mediaBudget, ['media','budget','percent'], ['الوسيلة','الميزانية','%']);
+            html += sub('٢.١٠ اتفاقيات التسويق');
+            html += para(md.agreements);
+            html += `</div>`;
+
+            // ═══════ Section 3 — الدراسة الفنية ═══════
+            html += sec('s3', '٣. الدراسة الفنية');
+            html += sub('٣.١ عملية التصنيع');
+            html += para(fsState.s3.process);
+            html += sub('٣.٢ الطاقة الإنتاجية');
+            html += renderTbl(fsState.rows.capacity, ['product','rate','hpd','dpy','annual'], ['المنتج','/ساعة','س/يوم','يوم/سنة','سنوي']);
+            html += sub('٣.٣ الآلات والمعدات');
+            html += renderTbl(fsState.rows.machinery, ['name','supplier','qty','total'], ['المعدة','المورد','الكمية','الإجمالي']);
+            html += sub('٣.٤ المباني');
+            html += renderTbl(fsState.rows.buildings, ['building','area'], ['المبنى','م²']);
+            html += renderTbl(fsState.rows.buildingCosts, ['item','cost'], ['البند','التكلفة']);
+            html += sub('٣.٥ السلامة');
+            html += `<div style="font-size:10px"><strong style="color:#6b7280">التكلفة:</strong> ${fsFmt(fsState.s3.safetyCost)} ر.س</div>${para(fsState.s3.hazards)}`;
+            html += sub('٣.٦ المركبات');
+            html += renderTbl(fsState.rows.vehicles, ['type','purpose','qty','cost'], ['النوع','الغرض','الكمية','التكلفة']);
+            html += sub('٣.٧ الأثاث وتقنية المعلومات');
+            html += renderTbl(fsState.rows.furniture, ['item','qty','cost'], ['البند','الكمية','التكلفة']);
+            if (fsState.s3.hasLicensing) {
+                html += sub('٣.٨ اتفاقيات الترخيص');
+                html += para(fsState.s3.licScope);
+                html += `<div style="font-size:10px"><strong style="color:#6b7280">التكلفة:</strong> ${fsFmt(fsState.s3.licCost)} ر.س</div>`;
+            }
+            html += sub('٣.٩ مصاريف ما قبل التشغيل');
+            html += renderTbl(fsState.rows.preOp, ['type','cost'], ['نوع المصروف','التكلفة']);
+            html += sub('٣.١٠ القوى العاملة — مباشرة');
+            html += renderTbl(fsState.rows.directLabor, ['pos','count','salary','total'], ['المنصب','العدد','الراتب','الإجمالي']);
+            html += sub('غير مباشرة');
+            html += renderTbl(fsState.rows.indirectLabor, ['pos','count','salary','total'], ['المنصب','العدد','الراتب','الإجمالي']);
+            html += sub(`٣.١١ المواد الخام${fsState.s3.rawProductName ? ' — ' + fsState.s3.rawProductName : ''}`);
+            html += renderTbl(fsState.rows.rawMaterials, ['mat','qty','unitCost','total'], ['المادة','الكمية','تكلفة','الإجمالي']);
+            html += sub('٣.١٢ المرافق');
+            html += para(fsState.s3.utilTypes);
+            html += renderTbl(fsState.rows.utilities, ['name','consumption','cost'], ['المرفق','الاستهلاك','التكلفة']);
+            html += `</div>`;
+
+            // ═══════ Section 4 — الدراسة المالية ═══════
+            html += sec('s4', '٤. الدراسة المالية');
+            const machTotal = fsState.rows.machinery.reduce((s,r)=>s+(+r.total||0),0);
+            const bldgTotal = fsState.rows.buildingCosts.reduce((s,r)=>s+(+r.cost||0),0);
+            const vehTotal = fsState.rows.vehicles.reduce((s,r)=>s+(+r.cost||0)*(+r.qty||0),0);
+            const furnTotal = fsState.rows.furniture.reduce((s,r)=>s+(+r.cost||0)*(+r.qty||0),0);
+            const preopTotal = fsState.rows.preOp.reduce((s,r)=>s+(+r.cost||0),0);
+            const capGrand = (+fsState.s4.landCost||0) + machTotal + bldgTotal + (+fsState.s3.safetyCost||0) + vehTotal + furnTotal + (+fsState.s3.licCost||0) + preopTotal;
+            html += sub('٤.١ التكلفة الرأسمالية');
+            html += `<div style="font-size:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:4px;padding:6px;margin:4px 0"><strong style="color:#16a34a">إجمالي تكلفة المشروع:</strong> <span style="color:#16a34a;font-weight:700">${fsFmt(capGrand)} ر.س</span></div>`;
+            html += sub('٤.٢ التكاليف التشغيلية');
+            html += renderTbl(fsState.rows.opCosts, ['item','y1','y2','y3','y4','y5'], ['البند','س1','س2','س3','س4','س5']);
+            html += sub('٤.٣ المؤشرات المالية');
+            html += `<div style="font-size:10px">ROI: <strong>${t(fsState.s4.roi)}%</strong> · الاسترداد: <strong>${t(fsState.s4.payback)} سنوات</strong></div>`;
+            html += `<div style="font-size:10px">NPV: <strong>${fsFmt(fsState.s4.npv)}</strong> · IRR: <strong>${t(fsState.s4.irr)}%</strong></div>`;
+            html += sub('٤.٤ تحليل الحساسية والمخاطر');
+            html += para(fsState.s4.sens);
+            html += para(fsState.s4.riskMit);
+            html += sub('٤.٥ خطة التمويل');
+            html += renderTbl(fsState.rows.financing, ['source','percent','amount'], ['المصدر','%','المبلغ']);
+            html += sub('٤.٦ خطة السيولة');
+            html += renderTbl(fsState.rows.liquidity, ['source','y1q1','y1q2','y1q3','y1q4','y2q1','y2q2','y2q3','y2q4'], ['المصدر','س1ر1','ر2','ر3','ر4','س2ر1','ر2','ر3','ر4']);
+            html += `</div>`;
+
+            // Selected products from path-select (if any)
+            if (typeof selectedProducts === 'object') {
+                const keys = Object.keys(selectedProducts);
+                if (keys.length) {
+                    html += `<div style="margin-bottom:14px;page-break-inside:avoid"><div style="color:#002d5d;font-weight:700;font-size:12px;border-right:3px solid #16a34a;padding-right:6px;margin-bottom:6px">٥. المنتجات والخدمات المختارة</div><div style="display:flex;flex-wrap:wrap;gap:4px">${keys.map(k => `<span style="background:#002d5d;color:#fff;font-size:8.5px;font-weight:700;padding:2px 7px;border-radius:999px">${selectedProducts[k]}</span>`).join('')}</div></div>`;
+                }
+            }
+
+            body.innerHTML = html;
+            fsSet('prev-page-total', Math.max(1, Math.ceil(body.scrollHeight / 800)));
+        }
+
+        let fsSaveTimer;
+        function fsScheduleSave() { clearTimeout(fsSaveTimer); fsSaveTimer = setTimeout(fsSave, 800); }
+
+        function fsSave() {
+            try {
+                fsState.lastSaved = new Date().toISOString();
+                localStorage.setItem(FS_KEY, JSON.stringify(fsState));
+                const tag = document.getElementById('fs-saved-tag');
+                if (tag) {
+                    try { tag.textContent = 'محفوظ — ' + new Date().toLocaleTimeString('ar-SA'); } catch(e) { tag.textContent = 'محفوظ'; }
+                    tag.classList.remove('hidden');
+                }
+            } catch(e) { console.warn('fs save failed', e); }
+        }
+
+        function fsLoad() {
+            try {
+                const raw = localStorage.getItem(FS_KEY);
+                if (!raw) return false;
+                const loaded = JSON.parse(raw);
+                ['s1','s3','s4','markets','marketRows','rows','activeMarket','currentSection','lastSaved'].forEach(k => {
+                    if (loaded[k] !== undefined) fsState[k] = loaded[k];
+                });
+                return true;
+            } catch(e) { return false; }
+        }
+
+        function fsSaveDraft() {
+            fsSave();
+            const t = document.createElement('div');
+            t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:10px 20px;border-radius:8px;font-weight:700;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;display:flex;align-items:center;gap:8px';
+            t.innerHTML = '<span style="font-size:16px">✓</span> تم حفظ المسودة بنجاح';
+            document.body.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 2200);
+        }
+
+        function fsScrollPreview() {
+            const shell = document.getElementById('fs-preview-shell');
+            if (shell) shell.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function fsDownloadPDF() {
+            const el = document.getElementById('pdf-preview');
+            if (!el) return;
+            if (!window.html2pdf) { window.print(); return; }
+            const opt = {
+                margin: 8,
+                filename: `feasibility_study_${(fsState.s1.projectName || 'sidf').replace(/\s+/g,'_')}.pdf`,
+                image: { type: 'jpeg', quality: 0.95 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(el).save();
+        }
+
+        function fsInit() {
+            fsLoad();
+            fsInitTables();
+            fsSeedDefaults();
+            fsBindInputs();
+            // Re-render all tables (after market default)
+            Object.keys(fsTableSchemas).forEach(n => fsRenderTable(n));
+            // Set market tab visual state
+            document.querySelectorAll('.fs-mtab').forEach(b => b.classList.toggle('active', b.dataset.market === fsState.activeMarket));
+            fsSet('fs-market-label', fsState.activeMarket === 'local' ? 'السوق المحلي' : (fsState.activeMarket === 'gulf' ? 'دول الخليج' : 'التصدير'));
+            // Section nav clicks
+            document.querySelectorAll('.fs-tab').forEach(t => t.addEventListener('click', () => fsShowSection(t.dataset.section)));
+            // Initial section
+            const sec = fsState.currentSection || 's1';
+            document.querySelectorAll('.fs-section').forEach(el => el.classList.toggle('hidden', el.id !== 'fs-section-' + sec));
+            document.querySelectorAll('.fs-tab').forEach(el => el.classList.toggle('active', el.dataset.section === sec));
+            // Licensing visibility
+            const cb = document.querySelector('[data-fs="s3.hasLicensing"]');
+            if (cb && cb.checked) document.getElementById('fs-licensing-block').classList.remove('hidden');
+            fsRecalc();
+            fsRenderPreview();
+            fsUpdateProgress();
+            // Auto-save every 30s
+            setInterval(fsSave, 30000);
+            if (window.lucide) lucide.createIcons();
+            if (typeof refreshUploadLock === 'function') refreshUploadLock();
+        }
+
+        // Compatibility shim — old toggleProduct calls updatePreview
+        function updatePreview() {
+            fsRenderPreview();
+            fsUpdateProgress();
+            if (typeof refreshUploadLock === 'function') refreshUploadLock();
+        }
+
+        // Boot
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fsInit);
+        } else {
+            setTimeout(fsInit, 0);
         }
 
         function toggleIndustrialLicense() {
