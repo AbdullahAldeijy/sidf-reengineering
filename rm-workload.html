@@ -37,6 +37,9 @@
 
         .group-zone { transition: all 0.25s; }
         .group-zone.drag-over { background-color:#f0fdf4; border-color:#28a745; }
+        .drop-zone.drag-over { background-color:#eef2ff; border-color:#6366f1; }
+
+        .order-card.selected { border-color:#fb923c; box-shadow:0 4px 12px rgba(251,146,60,0.25); }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden text-right">
@@ -77,7 +80,7 @@
         <header class="bg-white h-16 border-b border-gray-100 flex items-center justify-between px-4 md:px-8 z-10 shadow-sm gap-2">
             <div class="flex items-center gap-2 md:gap-4 min-w-0 pr-12 md:pr-0">
                 <h1 class="text-[#002d5d] font-bold text-base md:text-lg truncate">توزيع ملفات المجموعات</h1>
-                <span class="hidden md:inline text-xs text-gray-400 bg-gray-50 px-3 py-1 rounded-full">اسحب الملفات على المجموعة</span>
+                <span class="hidden md:inline text-xs text-gray-400 bg-gray-50 px-3 py-1 rounded-full">اسحب الطلبات على المجموعات والملفات على الطلب</span>
             </div>
             <div class="flex items-center gap-4">
                 <div class="bg-green-600 rounded-full p-2 text-white shadow-sm"><i data-lucide="user-cog" class="w-5 h-5"></i></div>
@@ -97,6 +100,7 @@
                         </h3>
                         <span id="orders-count" class="text-[10px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-bold">0</span>
                     </div>
+                    <p class="text-[10px] text-gray-400 italic mb-3">انقر للتفاصيل أو اسحب على مجموعة</p>
                     <div id="orders-pool" class="flex flex-col gap-2 overflow-y-auto pr-1 scroll-hide" style="max-height:75vh"></div>
                 </div>
 
@@ -108,7 +112,7 @@
                             الملفات المطلوبة من المجموعة
                         </h3>
                     </div>
-                    <p class="text-[10px] text-gray-400 italic mb-3">اسحب الملف على المجموعة المعنية</p>
+                    <p class="text-[10px] text-gray-400 italic mb-3">اسحب الملف على الطلب داخل المجموعة</p>
                     <div id="files-pool" class="flex flex-col gap-3 overflow-y-auto pr-1 scroll-hide" style="max-height:75vh"></div>
                 </div>
 
@@ -122,7 +126,7 @@
                         </h3>
                         <span class="text-[9px] text-gray-400 italic">جاهزة من الإدمن</span>
                     </div>
-                    <div id="groups-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto pr-1 scroll-hide" style="max-height:75vh"></div>
+                    <div id="groups-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto pr-1 scroll-hide" style="max-height:82vh"></div>
                 </div>
 
             </div>
@@ -157,16 +161,29 @@
             document.getElementById('sidebar-backdrop').classList.toggle('hidden');
         }
 
+        // All incoming orders, each with its own required files list
         const orders = [
-            { id: 'RQ-2024-944', name: 'شركة الطاقة المستدامة' }
+            { id: 'RQ-2024-944', name: 'شركة الطاقة المستدامة',     files: [] },
+            { id: 'RQ-2024-321', name: 'شركة التطوير العقاري',      files: ['MRD'] },
+            { id: 'RQ-2024-772', name: 'مجموعة النفط الوطنية',     files: [] },
+            { id: 'RQ-2024-815', name: 'مصنع البتروكيماويات',      files: ['FTR', 'FMR'] },
+            { id: 'RQ-2024-901', name: 'شركة الذكاء الاصطناعي',    files: [] },
+            { id: 'RQ-2024-455', name: 'مصنع الأغذية الصحية',      files: [] },
+            { id: 'RQ-2024-678', name: 'شركة النقل اللوجستي',     files: ['OWN'] },
+            { id: 'RQ-2024-512', name: 'مصانع الأسمنت الوطنية',    files: [] },
+            { id: 'RQ-2024-389', name: 'شركة المعادن المتقدمة',    files: [] }
         ];
 
         const projectMeta = {
-            'RQ-2024-321': { sector: 'الطاقة المتجددة',         amount: '25,000,000', owner: 'عبدالله السعيد', city: 'الرياض', group: 'مجموعة 1', phase: 2, risk: 'low' },
-            'RQ-2024-772': { sector: 'النفط والغاز',            amount: '60,000,000', owner: 'فهد منصور',     city: 'الدمام', group: 'مجموعة 2', phase: 2, risk: 'high' },
-            'RQ-2024-815': { sector: 'البتروكيماويات',          amount: '45,500,000', owner: 'خالد العمري',  city: 'الجبيل', group: 'مجموعة 1', phase: 3, risk: 'medium' },
+            'RQ-2024-321': { sector: 'الطاقة المتجددة',           amount: '25,000,000', owner: 'عبدالله السعيد', city: 'الرياض', group: 'مجموعة 1', phase: 2, risk: 'low' },
+            'RQ-2024-772': { sector: 'النفط والغاز',              amount: '60,000,000', owner: 'فهد منصور',     city: 'الدمام', group: 'مجموعة 2', phase: 2, risk: 'high' },
+            'RQ-2024-815': { sector: 'البتروكيماويات',            amount: '45,500,000', owner: 'خالد العمري',  city: 'الجبيل', group: 'مجموعة 1', phase: 3, risk: 'medium' },
             'RQ-2024-901': { sector: 'التقنية والذكاء الاصطناعي', amount: '12,500,000', owner: 'ريم عبدالله',  city: 'الرياض', group: 'مجموعة 3', phase: 5, risk: 'low' },
-            'RQ-2024-944': { sector: 'الطاقة المتجددة',         amount: '18,000,000', owner: 'سارة خالد',    city: 'تبوك',   group: 'مجموعة 4', phase: 1, risk: 'low' }
+            'RQ-2024-944': { sector: 'الطاقة المتجددة',           amount: '18,000,000', owner: 'سارة خالد',    city: 'تبوك',   group: 'مجموعة 4', phase: 1, risk: 'low' },
+            'RQ-2024-455': { sector: 'الأغذية والمشروبات',        amount: '8,000,000',  owner: 'محمد العتيبي', city: 'جدة',    group: 'مجموعة 2', phase: 1, risk: 'low' },
+            'RQ-2024-678': { sector: 'النقل واللوجستيات',         amount: '32,000,000', owner: 'يوسف الحربي',  city: 'الرياض', group: 'مجموعة 3', phase: 4, risk: 'medium' },
+            'RQ-2024-512': { sector: 'مواد البناء',               amount: '55,000,000', owner: 'بدر الشمري',   city: 'حائل',   group: 'مجموعة 1', phase: 2, risk: 'medium' },
+            'RQ-2024-389': { sector: 'التعدين',                   amount: '78,000,000', owner: 'طارق القحطاني', city: 'بريدة',  group: 'مجموعة 4', phase: 3, risk: 'high' }
         };
         const phaseLabels = ['Loan Application','Evaluation','Approval','Signing','Disbursement','Loan Closing'];
         function modalRiskBadge(risk) {
@@ -208,24 +225,30 @@
         document.getElementById('project-modal').addEventListener('click', function(e) { if (e.target === this) closeProjectModal(); });
 
         const fileTypes = [
-            { id: 'MRD', name: 'MRD', label: 'تقرير دراسة السوق', icon: 'bar-chart-3', cls: 'file-mrd' },
-            { id: 'FTR', name: 'FTR', label: 'تقرير الدراسة الفنية', icon: 'settings-2', cls: 'file-ftr' },
-            { id: 'FMR', name: 'FMR', label: 'تقرير المخاطر المالية', icon: 'shield-alert', cls: 'file-fmr' },
-            { id: 'OWN', name: 'Ownership',  label: 'تقرير الملكية', icon: 'user-check', cls: 'file-own' },
-            { id: 'PER', name: 'PER',        label: 'تقرير تقييم الأداء', icon: 'gauge', cls: 'file-per' },
-            { id: 'RSK', name: 'Risk',       label: 'تقييم المخاطر', icon: 'alert-octagon', cls: 'file-rsk' },
-            { id: 'CRM', name: 'CRM',        label: 'نموذج المخاطر الائتمانية', icon: 'line-chart', cls: 'file-crm' }
+            { id: 'MRD', name: 'MRD',       label: 'تقرير دراسة السوق',         icon: 'bar-chart-3',   cls: 'file-mrd' },
+            { id: 'FTR', name: 'FTR',       label: 'تقرير الدراسة الفنية',       icon: 'settings-2',    cls: 'file-ftr' },
+            { id: 'FMR', name: 'FMR',       label: 'تقرير المخاطر المالية',      icon: 'shield-alert',  cls: 'file-fmr' },
+            { id: 'OWN', name: 'Ownership', label: 'تقرير الملكية',              icon: 'user-check',    cls: 'file-own' },
+            { id: 'PER', name: 'PER',       label: 'تقرير تقييم الأداء',         icon: 'gauge',         cls: 'file-per' },
+            { id: 'RSK', name: 'Risk',      label: 'تقييم المخاطر',              icon: 'alert-octagon', cls: 'file-rsk' },
+            { id: 'CRM', name: 'CRM',       label: 'نموذج المخاطر الائتمانية',   icon: 'line-chart',    cls: 'file-crm' }
         ];
 
-        // Pre-populated groups (assigned by admin)
+        // Pre-populated groups (assigned by admin) - now allow multiple orders each
         const groups = [
-            { id: 'g-1', name: 'مجموعة 1', employees: ['ناصر الراجحي', 'سارة خالد', 'ريم عبدالله'], projects: ['RQ-2024-321'], files: [] },
-            { id: 'g-2', name: 'مجموعة 2', employees: ['أحمد علي', 'فهد منصور'], projects: ['RQ-2024-772'], files: [] },
-            { id: 'g-3', name: 'مجموعة 3', employees: ['خالد العمري', 'سارة خالد'], projects: ['RQ-2024-901'], files: [] },
-            { id: 'g-4', name: 'مجموعة 4', employees: ['ناصر الراجحي', 'ريم عبدالله'], projects: [], files: [] }
+            { id: 'g-1', name: 'مجموعة 1', employees: ['ناصر الراجحي', 'سارة خالد', 'ريم عبدالله'], projects: ['RQ-2024-321', 'RQ-2024-815'] },
+            { id: 'g-2', name: 'مجموعة 2', employees: ['أحمد علي', 'فهد منصور'],                     projects: ['RQ-2024-772'] },
+            { id: 'g-3', name: 'مجموعة 3', employees: ['خالد العمري', 'سارة خالد'],                  projects: ['RQ-2024-901', 'RQ-2024-678'] },
+            { id: 'g-4', name: 'مجموعة 4', employees: ['ناصر الراجحي', 'ريم عبدالله'],               projects: [] }
         ];
 
         let dragged = null;
+        let expandedOrderId = null;
+
+        function toggleExpandOrder(orderId) {
+            expandedOrderId = expandedOrderId === orderId ? null : orderId;
+            renderGroups();
+        }
 
         function renderOrders() {
             const pool = document.getElementById('orders-pool');
@@ -238,10 +261,16 @@
                 c.dataset.kind = 'order';
                 c.dataset.id = o.id;
                 c.dataset.name = o.name;
+                const fileBadge = o.files.length > 0
+                    ? `<span class="bg-indigo-100 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full">${o.files.length} ملف</span>`
+                    : '';
                 c.innerHTML = `
                     <div class="flex items-start justify-between mb-1">
                         <div class="bg-orange-50 p-1.5 rounded-md"><i data-lucide="briefcase" class="w-3.5 h-3.5 text-orange-600"></i></div>
-                        <i data-lucide="move" class="w-3 h-3 text-gray-300"></i>
+                        <div class="flex items-center gap-1">
+                            ${fileBadge}
+                            <i data-lucide="move" class="w-3 h-3 text-gray-300"></i>
+                        </div>
                     </div>
                     <h4 class="text-[#002d5d] font-bold text-[11px] mb-0.5">${o.id}</h4>
                     <p class="text-[9px] text-gray-500 leading-snug truncate">${o.name}</p>
@@ -290,17 +319,21 @@
                 const card = document.createElement('div');
                 card.className = 'group-zone border-2 border-purple-200 bg-purple-50/20 rounded-xl p-3';
                 card.dataset.groupId = g.id;
-                const load = Math.min(g.projects.length * 3, 10);
+                const load = Math.min(g.projects.length * 2, 10);
                 const loadPercent = (load / 10) * 100;
                 const loadColor = load === 0 ? 'bg-gray-300' : load <= 4 ? 'bg-green-500' : load <= 7 ? 'bg-orange-500' : 'bg-red-500';
                 const loadTextColor = load === 0 ? 'text-gray-400' : load <= 4 ? 'text-green-600' : load <= 7 ? 'text-orange-600' : 'text-red-600';
+                const totalFiles = g.projects.reduce((sum, pid) => {
+                    const o = orders.find(x => x.id === pid);
+                    return sum + (o ? o.files.length : 0);
+                }, 0);
                 card.innerHTML = `
                     <div class="flex items-center justify-between mb-2 pb-2 border-b border-purple-200">
                         <div class="flex items-center gap-2">
                             <div class="bg-purple-500 p-1 rounded"><i data-lucide="users-round" class="w-3.5 h-3.5 text-white"></i></div>
                             <h4 class="text-xs font-bold text-[#002d5d]">${g.name}</h4>
                         </div>
-                        <span class="text-[9px] text-gray-400">${g.employees.length}م · ${g.projects.length}ط · ${g.files.length}ملف</span>
+                        <span class="text-[9px] text-gray-400">${g.employees.length}م · ${g.projects.length}ط · ${totalFiles}ملف</span>
                     </div>
 
                     <div class="mb-2">
@@ -320,28 +353,27 @@
                         </div>
                     </div>
 
-                    <div class="mb-2">
-                        <div class="text-[9px] text-gray-500 font-bold mb-1">الطلبات</div>
-                        <div class="flex flex-wrap gap-1">
-                            ${g.projects.map(p => `<span onclick="event.stopPropagation();openProjectModal('${p}')" class="cursor-pointer inline-flex items-center gap-1 px-1.5 py-0.5 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-full text-[9px] font-bold transition-all"><i data-lucide="briefcase" class="w-2.5 h-2.5"></i>${p}</span>`).join('')}
-                        </div>
-                    </div>
-
                     <div>
-                        <div class="text-[9px] text-gray-500 font-bold mb-1">الملفات المطلوبة</div>
-                        <div class="min-h-[40px] border-2 border-dashed border-indigo-200 rounded p-1.5 bg-white flex flex-wrap gap-1 items-start">
-                            ${g.files.length > 0
-                                ? g.files.map(f => {
-                                    const ft = fileTypes.find(x => x.id === f);
-                                    return `<span class="inline-flex items-center gap-1 px-2 py-0.5 ${ft.cls} border rounded-full text-[9px] font-bold">
-                                        <i data-lucide="${ft.icon}" class="w-2.5 h-2.5"></i>${ft.name}
-                                        <button onclick="removeFile('${g.id}','${f}')" class="opacity-60 hover:opacity-100 mr-0.5"><i data-lucide="x" class="w-2.5 h-2.5"></i></button>
+                        <div class="text-[9px] text-gray-500 font-bold mb-1">الطلبات</div>
+                        <div class="min-h-[36px] border border-dashed border-orange-200 rounded p-1.5 bg-white/60 flex flex-wrap gap-1 items-start">
+                            ${g.projects.length > 0
+                                ? g.projects.map(p => {
+                                    const o = orders.find(x => x.id === p);
+                                    const fc = o ? o.files.length : 0;
+                                    const isExp = p === expandedOrderId;
+                                    const expCls = isExp ? 'ring-2 ring-orange-500 bg-orange-200' : 'bg-orange-100 hover:bg-orange-200';
+                                    return `<span onclick="event.stopPropagation();toggleExpandOrder('${p}')" class="cursor-pointer inline-flex items-center gap-1 px-2 py-0.5 ${expCls} text-orange-700 rounded-full text-[9px] font-bold transition-all">
+                                        <i data-lucide="briefcase" class="w-2.5 h-2.5"></i>${p}
+                                        ${fc > 0 ? `<span class="bg-orange-700 text-white px-1 rounded-full text-[8px] mr-0.5">${fc}</span>` : ''}
+                                        <button onclick="event.stopPropagation();removeOrderFromGroup('${g.id}','${p}')" class="opacity-50 hover:opacity-100 mr-0.5"><i data-lucide="x" class="w-2.5 h-2.5"></i></button>
                                     </span>`;
                                 }).join('')
-                                : '<span class="text-[9px] text-gray-300 italic self-center mx-auto">اسحب ملف هنا</span>'
+                                : '<span class="text-[9px] text-gray-300 italic self-center mx-auto py-1">اسحب طلباً هنا</span>'
                             }
                         </div>
                     </div>
+
+                    ${expandedOrderId && g.projects.includes(expandedOrderId) ? renderExpandedFilesHTML(expandedOrderId) : ''}
                 `;
                 card.addEventListener('dragover', onDragOver);
                 card.addEventListener('dragleave', onDragLeave);
@@ -364,21 +396,17 @@
             this.classList.remove('drag-over');
             if (!dragged) return;
             const g = groups.find(x => x.id === this.dataset.groupId);
-            if (!g) return;
+            if (!g) { dragged = null; return; }
 
             if (dragged.kind === 'file') {
-                if (g.files.includes(dragged.id)) {
-                    toast(`الملف ${dragged.id} موجود مسبقاً في ${g.name}`, 'warning');
+                if (expandedOrderId && g.projects.includes(expandedOrderId)) {
+                    addFileToOrder(expandedOrderId, dragged.id);
                 } else {
-                    g.files.push(dragged.id);
-                    toast(`تم تعيين ${dragged.id} إلى ${g.name}`, 'success');
-                    renderGroups();
+                    toast('انقر على الطلب أولاً ثم اسحب الملف على لوحة الملفات', 'warning');
                 }
             } else if (dragged.kind === 'order') {
                 if (g.projects.includes(dragged.id)) {
                     toast(`الطلب ${dragged.id} موجود مسبقاً في ${g.name}`, 'warning');
-                } else if (g.projects.length >= 1) {
-                    toast(`${g.name} مكتملة - لا يمكن إضافة أكثر من طلب واحد`, 'warning');
                 } else {
                     g.projects.push(dragged.id);
                     toast(`تم إضافة ${dragged.id} إلى ${g.name}`, 'success');
@@ -388,10 +416,58 @@
             dragged = null;
         }
 
-        function removeFile(groupId, fileId) {
+        function addFileToOrder(orderId, fileId) {
+            const o = orders.find(x => x.id === orderId);
+            if (!o) return;
+            if (o.files.includes(fileId)) {
+                toast(`الملف ${fileId} موجود مسبقاً في ${orderId}`, 'warning');
+            } else {
+                o.files.push(fileId);
+                toast(`تم تعيين ${fileId} إلى ${orderId}`, 'success');
+                renderOrders();
+                renderGroups();
+            }
+        }
+
+        function removeOrderFromGroup(groupId, orderId) {
             const g = groups.find(x => x.id === groupId);
-            if (g) g.files = g.files.filter(f => f !== fileId);
+            if (g) g.projects = g.projects.filter(p => p !== orderId);
+            if (expandedOrderId === orderId) expandedOrderId = null;
             renderGroups();
+        }
+
+        function removeOrderFile(orderId, fileId) {
+            const o = orders.find(x => x.id === orderId);
+            if (o) o.files = o.files.filter(f => f !== fileId);
+            renderOrders();
+            renderGroups();
+        }
+
+        function renderExpandedFilesHTML(orderId) {
+            const o = orders.find(x => x.id === orderId);
+            if (!o) return '';
+            const filesHtml = o.files.length > 0
+                ? o.files.map(fid => {
+                    const ft = fileTypes.find(x => x.id === fid);
+                    return `<span class="inline-flex items-center gap-1 px-2 py-1 ${ft.cls} border rounded-full text-[10px] font-bold">
+                        <i data-lucide="${ft.icon}" class="w-3 h-3"></i>${ft.name}
+                        <button onclick="event.stopPropagation();removeOrderFile('${o.id}','${fid}')" class="opacity-60 hover:opacity-100 mr-1"><i data-lucide="x" class="w-3 h-3"></i></button>
+                    </span>`;
+                }).join('')
+                : '<span class="text-[10px] text-gray-400 italic self-center mx-auto py-2">اسحب ملف هنا</span>';
+
+            return `<div class="mt-3 border-t border-purple-200 pt-2">
+                <div class="flex items-center justify-between mb-1">
+                    <div class="text-[9px] font-bold text-[#002d5d] flex items-center gap-1">
+                        <i data-lucide="file-stack" class="w-3 h-3 text-indigo-500"></i>
+                        الملفات المطلوبة لـ <span class="text-orange-600">${o.id}</span>
+                    </div>
+                    <button onclick="event.stopPropagation();toggleExpandOrder('${o.id}')" class="text-gray-400 hover:text-red-500 p-0.5"><i data-lucide="x" class="w-3 h-3"></i></button>
+                </div>
+                <div class="min-h-[44px] border-2 border-dashed border-indigo-200 rounded p-1.5 bg-indigo-50/30 flex flex-wrap gap-1 items-start">
+                    ${filesHtml}
+                </div>
+            </div>`;
         }
 
         function toast(message, type = 'info') {
