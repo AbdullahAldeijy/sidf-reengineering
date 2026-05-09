@@ -35,11 +35,8 @@
         .file-rsk { background:#fee2e2; color:#991b1b; border-color:#fca5a5; }
         .file-crm { background:#cffafe; color:#155e75; border-color:#67e8f9; }
 
-        .group-zone { transition: all 0.25s; }
-        .group-zone.drag-over { background-color:#f0fdf4; border-color:#28a745; }
-        .drop-zone.drag-over { background-color:#eef2ff; border-color:#6366f1; }
-
-        .order-card.selected { border-color:#fb923c; box-shadow:0 4px 12px rgba(251,146,60,0.25); }
+        .assigned-card.drag-over { background-color:#f0fdf4; border-color:#28a745; box-shadow:0 4px 12px rgba(40,167,69,0.15); }
+        .assigned-card.drag-over .files-drop { background-color:#eef2ff; border-color:#6366f1; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden text-right">
@@ -63,6 +60,10 @@
             <a href="rm-workload.html" class="active-sidebar-item flex flex-col items-center py-4 gap-1 text-[11px] font-bold">
                 <i data-lucide="split" class="w-6 h-6"></i>
                 <span>التوزيع</span>
+            </a>
+            <a href="rm-tasks.html" class="flex flex-col items-center py-4 gap-1 text-[11px] text-gray-400 hover:bg-gray-50 transition-all">
+                <i data-lucide="clipboard-check" class="w-6 h-6"></i>
+                <span>مهام</span>
             </a>
             <a href="rm-chats.html" class="flex flex-col items-center py-4 gap-1 text-[11px] text-gray-400 hover:bg-gray-50 transition-all">
                 <i data-lucide="messages-square" class="w-6 h-6"></i>
@@ -116,17 +117,17 @@
                     <div id="files-pool" class="flex flex-col gap-3 overflow-y-auto pr-1 scroll-hide" style="max-height:75vh"></div>
                 </div>
 
-                <!-- Column 3: Groups -->
+                <!-- Column 3: My Assigned Orders -->
                 <div class="lg:col-span-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="text-[#002d5d] font-bold text-sm flex items-center gap-2">
-                            <i data-lucide="users-round" class="w-4 h-4 text-purple-600"></i>
-                            مجموعات العمل
-                            <span id="groups-count" class="text-[10px] bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full font-bold mr-1">0</span>
+                            <i data-lucide="clipboard-list" class="w-4 h-4 text-[#28a745]"></i>
+                            الطلبات المسندة لك
+                            <span id="assigned-count" class="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-bold mr-1">0</span>
                         </h3>
-                        <span class="text-[9px] text-gray-400 italic">جاهزة من الإدمن</span>
+                        <span class="text-[9px] text-gray-400 italic">اسحب الملف على الطلب</span>
                     </div>
-                    <div id="groups-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto pr-1 scroll-hide" style="max-height:82vh"></div>
+                    <div id="assigned-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto pr-1 scroll-hide" style="max-height:82vh"></div>
                 </div>
 
             </div>
@@ -234,21 +235,10 @@
             { id: 'CRM', name: 'CRM',       label: 'نموذج المخاطر الائتمانية',   icon: 'line-chart',    cls: 'file-crm' }
         ];
 
-        // Pre-populated groups (assigned by admin) - now allow multiple orders each
-        const groups = [
-            { id: 'g-1', name: 'مجموعة 1', employees: ['ناصر الراجحي', 'سارة خالد', 'ريم عبدالله'], projects: ['RQ-2024-321', 'RQ-2024-815'] },
-            { id: 'g-2', name: 'مجموعة 2', employees: ['أحمد علي', 'فهد منصور'],                     projects: ['RQ-2024-772'] },
-            { id: 'g-3', name: 'مجموعة 3', employees: ['خالد العمري', 'سارة خالد'],                  projects: ['RQ-2024-901', 'RQ-2024-678'] },
-            { id: 'g-4', name: 'مجموعة 4', employees: ['ناصر الراجحي', 'ريم عبدالله'],               projects: [] }
-        ];
+        // Orders assigned to the current RM (pre-populated demo)
+        let assignedOrderIds = ['RQ-2024-321', 'RQ-2024-815', 'RQ-2024-772', 'RQ-2024-901', 'RQ-2024-678'];
 
         let dragged = null;
-        let expandedOrderId = null;
-
-        function toggleExpandOrder(orderId) {
-            expandedOrderId = expandedOrderId === orderId ? null : orderId;
-            renderGroups();
-        }
 
         function renderOrders() {
             const pool = document.getElementById('orders-pool');
@@ -284,6 +274,80 @@
             lucide.createIcons();
         }
 
+        function getOrderMeta(id) {
+            return projectMeta[id] || { sector: '—', amount: '—', city: '—' };
+        }
+
+        function renderAssigned() {
+            const wrap = document.getElementById('assigned-container');
+            document.getElementById('assigned-count').textContent = assignedOrderIds.length;
+            wrap.innerHTML = '';
+
+            if (assignedOrderIds.length === 0) {
+                wrap.innerHTML = `<div class="col-span-full min-h-[200px] border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-300 text-xs italic">
+                    <i data-lucide="inbox" class="w-8 h-8 mb-2"></i>
+                    لا توجد طلبات مسندة لك — اسحب طلباً من القائمة
+                </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            assignedOrderIds.forEach(oid => {
+                const o = orders.find(x => x.id === oid);
+                if (!o) return;
+                const meta = getOrderMeta(oid);
+                const card = document.createElement('div');
+                card.className = 'assigned-card border-2 border-green-200 bg-green-50/20 rounded-xl p-3 transition-all';
+                card.dataset.assignedId = oid;
+
+                const filesHtml = o.files.length > 0
+                    ? o.files.map(fid => {
+                        const ft = fileTypes.find(x => x.id === fid);
+                        return `<span class="inline-flex items-center gap-1 px-2 py-1 ${ft.cls} border rounded-full text-[10px] font-bold">
+                            <i data-lucide="${ft.icon}" class="w-3 h-3"></i>${ft.name}
+                            <button onclick="event.stopPropagation();removeOrderFile('${oid}','${fid}')" class="opacity-60 hover:opacity-100 mr-1"><i data-lucide="x" class="w-3 h-3"></i></button>
+                        </span>`;
+                    }).join('')
+                    : '<span class="text-[10px] text-gray-400 italic self-center mx-auto py-2">اسحب ملف هنا</span>';
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-2 pb-2 border-b border-green-200">
+                        <div onclick="event.stopPropagation();openProjectModal('${oid}')" class="flex items-center gap-2 min-w-0 cursor-pointer hover:opacity-75 transition-opacity" title="عرض تفاصيل الطلب">
+                            <div class="bg-[#28a745] p-1 rounded shrink-0"><i data-lucide="briefcase" class="w-3.5 h-3.5 text-white"></i></div>
+                            <div class="min-w-0">
+                                <h4 class="text-xs font-bold text-[#002d5d] truncate hover:underline">${oid}</h4>
+                                <p class="text-[9px] text-gray-500 truncate">${o.name}</p>
+                            </div>
+                        </div>
+                        <button onclick="event.stopPropagation();unassignOrder('${oid}')" class="text-gray-400 hover:text-red-500 p-1 shrink-0"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                    </div>
+
+                    <div class="flex flex-wrap gap-1 mb-2 text-[9px]">
+                        <span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">${meta.sector}</span>
+                        <span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold">${meta.amount} ر.س</span>
+                        <span class="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full">${meta.city}</span>
+                    </div>
+
+                    <div>
+                        <div class="text-[9px] font-bold text-[#002d5d] mb-1 flex items-center gap-1">
+                            <i data-lucide="file-stack" class="w-3 h-3 text-indigo-500"></i>
+                            الملفات المطلوبة لـ <span class="text-orange-600">${oid}</span>
+                            <span class="text-gray-400 mr-auto">${o.files.length} ملف</span>
+                        </div>
+                        <div class="files-drop min-h-[50px] border-2 border-dashed border-indigo-200 rounded p-1.5 bg-indigo-50/30 flex flex-wrap gap-1 items-start transition-all">
+                            ${filesHtml}
+                        </div>
+                    </div>
+                `;
+
+                card.addEventListener('dragover', onAssignedDragOver);
+                card.addEventListener('dragleave', onAssignedDragLeave);
+                card.addEventListener('drop', onAssignedDrop);
+                wrap.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
         function renderFiles() {
             const pool = document.getElementById('files-pool');
             pool.innerHTML = '';
@@ -311,109 +375,53 @@
             lucide.createIcons();
         }
 
-        function renderGroups() {
-            const wrap = document.getElementById('groups-container');
-            document.getElementById('groups-count').textContent = groups.length;
-            wrap.innerHTML = '';
-            groups.forEach(g => {
-                const card = document.createElement('div');
-                card.className = 'group-zone border-2 border-purple-200 bg-purple-50/20 rounded-xl p-3';
-                card.dataset.groupId = g.id;
-                const load = Math.min(g.projects.length * 2, 10);
-                const loadPercent = (load / 10) * 100;
-                const loadColor = load === 0 ? 'bg-gray-300' : load <= 4 ? 'bg-green-500' : load <= 7 ? 'bg-orange-500' : 'bg-red-500';
-                const loadTextColor = load === 0 ? 'text-gray-400' : load <= 4 ? 'text-green-600' : load <= 7 ? 'text-orange-600' : 'text-red-600';
-                const totalFiles = g.projects.reduce((sum, pid) => {
-                    const o = orders.find(x => x.id === pid);
-                    return sum + (o ? o.files.length : 0);
-                }, 0);
-                card.innerHTML = `
-                    <div class="flex items-center justify-between mb-2 pb-2 border-b border-purple-200">
-                        <div class="flex items-center gap-2">
-                            <div class="bg-purple-500 p-1 rounded"><i data-lucide="users-round" class="w-3.5 h-3.5 text-white"></i></div>
-                            <h4 class="text-xs font-bold text-[#002d5d]">${g.name}</h4>
-                        </div>
-                        <span class="text-[9px] text-gray-400">${g.employees.length}م · ${g.projects.length}ط · ${totalFiles}ملف</span>
-                    </div>
-
-                    <div class="mb-2">
-                        <div class="flex items-center justify-between text-[9px] mb-1">
-                            <span class="text-gray-500 font-bold">الحمل</span>
-                            <span class="font-bold ${loadTextColor}">${load}/10</span>
-                        </div>
-                        <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                            <div class="${loadColor} h-full rounded-full transition-all" style="width:${loadPercent}%"></div>
-                        </div>
-                    </div>
-
-                    <div class="mb-2">
-                        <div class="text-[9px] text-gray-500 font-bold mb-1">الموظفون</div>
-                        <div class="flex flex-wrap gap-1">
-                            ${g.employees.map(e => `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-[9px] font-bold"><i data-lucide="user" class="w-2.5 h-2.5"></i>${e}</span>`).join('')}
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="text-[9px] text-gray-500 font-bold mb-1">الطلبات</div>
-                        <div class="min-h-[36px] border border-dashed border-orange-200 rounded p-1.5 bg-white/60 flex flex-wrap gap-1 items-start">
-                            ${g.projects.length > 0
-                                ? g.projects.map(p => {
-                                    const o = orders.find(x => x.id === p);
-                                    const fc = o ? o.files.length : 0;
-                                    const isExp = p === expandedOrderId;
-                                    const expCls = isExp ? 'ring-2 ring-orange-500 bg-orange-200' : 'bg-orange-100 hover:bg-orange-200';
-                                    return `<span onclick="event.stopPropagation();toggleExpandOrder('${p}')" class="cursor-pointer inline-flex items-center gap-1 px-2 py-0.5 ${expCls} text-orange-700 rounded-full text-[9px] font-bold transition-all">
-                                        <i data-lucide="briefcase" class="w-2.5 h-2.5"></i>${p}
-                                        ${fc > 0 ? `<span class="bg-orange-700 text-white px-1 rounded-full text-[8px] mr-0.5">${fc}</span>` : ''}
-                                        <button onclick="event.stopPropagation();removeOrderFromGroup('${g.id}','${p}')" class="opacity-50 hover:opacity-100 mr-0.5"><i data-lucide="x" class="w-2.5 h-2.5"></i></button>
-                                    </span>`;
-                                }).join('')
-                                : '<span class="text-[9px] text-gray-300 italic self-center mx-auto py-1">اسحب طلباً هنا</span>'
-                            }
-                        </div>
-                    </div>
-
-                    ${expandedOrderId && g.projects.includes(expandedOrderId) ? renderExpandedFilesHTML(expandedOrderId) : ''}
-                `;
-                card.addEventListener('dragover', onDragOver);
-                card.addEventListener('dragleave', onDragLeave);
-                card.addEventListener('drop', onDrop);
-                wrap.appendChild(card);
-            });
-            lucide.createIcons();
-        }
-
         function onDragStart(e) {
             dragged = { kind: this.dataset.kind, id: this.dataset.id, name: this.dataset.name || this.dataset.label };
             this.classList.add('dragging');
         }
         function onDragEnd(e) { this.classList.remove('dragging'); }
-        function onDragOver(e) { e.preventDefault(); this.classList.add('drag-over'); }
-        function onDragLeave(e) { this.classList.remove('drag-over'); }
 
-        function onDrop(e) {
+        function onAssignedDragOver(e) { e.preventDefault(); this.classList.add('drag-over'); }
+        function onAssignedDragLeave(e) { this.classList.remove('drag-over'); }
+        function onAssignedDrop(e) {
             e.preventDefault();
             this.classList.remove('drag-over');
             if (!dragged) return;
-            const g = groups.find(x => x.id === this.dataset.groupId);
-            if (!g) { dragged = null; return; }
-
+            const oid = this.dataset.assignedId;
             if (dragged.kind === 'file') {
-                if (expandedOrderId && g.projects.includes(expandedOrderId)) {
-                    addFileToOrder(expandedOrderId, dragged.id);
-                } else {
-                    toast('انقر على الطلب أولاً ثم اسحب الملف على لوحة الملفات', 'warning');
-                }
+                addFileToOrder(oid, dragged.id);
             } else if (dragged.kind === 'order') {
-                if (g.projects.includes(dragged.id)) {
-                    toast(`الطلب ${dragged.id} موجود مسبقاً في ${g.name}`, 'warning');
-                } else {
-                    g.projects.push(dragged.id);
-                    toast(`تم إضافة ${dragged.id} إلى ${g.name}`, 'success');
-                    renderGroups();
-                }
+                assignOrder(dragged.id);
             }
             dragged = null;
+        }
+
+        function setupAssignedContainerDrop() {
+            const wrap = document.getElementById('assigned-container');
+            wrap.addEventListener('dragover', (e) => { e.preventDefault(); });
+            wrap.addEventListener('drop', (e) => {
+                if (e.target !== wrap) return;
+                e.preventDefault();
+                if (!dragged) return;
+                if (dragged.kind === 'order') assignOrder(dragged.id);
+                else if (dragged.kind === 'file') toast('اسحب الملف على بطاقة الطلب', 'warning');
+                dragged = null;
+            });
+        }
+
+        function assignOrder(orderId) {
+            if (assignedOrderIds.includes(orderId)) {
+                toast(`${orderId} مسند لك مسبقاً`, 'warning');
+            } else {
+                assignedOrderIds.push(orderId);
+                toast(`تم إسناد ${orderId} إليك`, 'success');
+                renderAssigned();
+            }
+        }
+
+        function unassignOrder(orderId) {
+            assignedOrderIds = assignedOrderIds.filter(x => x !== orderId);
+            renderAssigned();
         }
 
         function addFileToOrder(orderId, fileId) {
@@ -425,49 +433,15 @@
                 o.files.push(fileId);
                 toast(`تم تعيين ${fileId} إلى ${orderId}`, 'success');
                 renderOrders();
-                renderGroups();
+                renderAssigned();
             }
-        }
-
-        function removeOrderFromGroup(groupId, orderId) {
-            const g = groups.find(x => x.id === groupId);
-            if (g) g.projects = g.projects.filter(p => p !== orderId);
-            if (expandedOrderId === orderId) expandedOrderId = null;
-            renderGroups();
         }
 
         function removeOrderFile(orderId, fileId) {
             const o = orders.find(x => x.id === orderId);
             if (o) o.files = o.files.filter(f => f !== fileId);
             renderOrders();
-            renderGroups();
-        }
-
-        function renderExpandedFilesHTML(orderId) {
-            const o = orders.find(x => x.id === orderId);
-            if (!o) return '';
-            const filesHtml = o.files.length > 0
-                ? o.files.map(fid => {
-                    const ft = fileTypes.find(x => x.id === fid);
-                    return `<span class="inline-flex items-center gap-1 px-2 py-1 ${ft.cls} border rounded-full text-[10px] font-bold">
-                        <i data-lucide="${ft.icon}" class="w-3 h-3"></i>${ft.name}
-                        <button onclick="event.stopPropagation();removeOrderFile('${o.id}','${fid}')" class="opacity-60 hover:opacity-100 mr-1"><i data-lucide="x" class="w-3 h-3"></i></button>
-                    </span>`;
-                }).join('')
-                : '<span class="text-[10px] text-gray-400 italic self-center mx-auto py-2">اسحب ملف هنا</span>';
-
-            return `<div class="mt-3 border-t border-purple-200 pt-2">
-                <div class="flex items-center justify-between mb-1">
-                    <div class="text-[9px] font-bold text-[#002d5d] flex items-center gap-1">
-                        <i data-lucide="file-stack" class="w-3 h-3 text-indigo-500"></i>
-                        الملفات المطلوبة لـ <span class="text-orange-600">${o.id}</span>
-                    </div>
-                    <button onclick="event.stopPropagation();toggleExpandOrder('${o.id}')" class="text-gray-400 hover:text-red-500 p-0.5"><i data-lucide="x" class="w-3 h-3"></i></button>
-                </div>
-                <div class="min-h-[44px] border-2 border-dashed border-indigo-200 rounded p-1.5 bg-indigo-50/30 flex flex-wrap gap-1 items-start">
-                    ${filesHtml}
-                </div>
-            </div>`;
+            renderAssigned();
         }
 
         function toast(message, type = 'info') {
@@ -482,7 +456,8 @@
 
         renderOrders();
         renderFiles();
-        renderGroups();
+        renderAssigned();
+        setupAssignedContainerDrop();
     </script>
 </body>
 </html>
