@@ -76,6 +76,23 @@
             opacity: 1;
         }
 
+        /* ═══════════ Product / Service Dropdown ═══════════ */
+        .prod-opt { display:flex; align-items:center; gap:10px; padding:9px 14px; cursor:pointer; border-bottom:1px solid #f3f4f6; transition: background 0.15s; }
+        .prod-opt:last-child { border-bottom: 0; }
+        .prod-opt:hover { background:#f9fafb; }
+        .prod-opt.active { background:#f0fdf4; }
+        .prod-group-h { background:#f9fafb; padding:6px 14px; font-size:10px; font-weight:700; color:#6b7280; border-bottom:1px solid #e5e7eb; position:sticky; top:0; }
+        .prod-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:10px; font-weight:700; background:#eef2ff; color:#3730a3; padding:2px 6px; border-radius:4px; min-width:48px; text-align:center; letter-spacing:0.3px; }
+        .prod-opt.unsupp .prod-code { background:#fef3c7; color:#92400e; }
+        .prod-unsupp-badge { background:#fef3c7; color:#92400e; font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; }
+        .prod-check { width:16px; height:16px; border-radius:4px; border:1.5px solid #d1d5db; display:inline-flex; align-items:center; justify-content:center; font-size:10px; flex-shrink:0; background:#fff; }
+        .prod-opt.active .prod-check { background:#28a745; border-color:#28a745; color:#fff; }
+        .prod-info { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:50%; background:#eef5ed; color:#28a745; font-size:11px; font-weight:700; cursor:help; flex-shrink:0; transition: all 0.2s; }
+        .prod-info:hover { background:#28a745; color:#fff; }
+        #prod-float-tip { position:fixed; max-width:280px; background:#002d5d; color:#fff; font-size:11px; font-weight:500; line-height:1.6; padding:8px 12px; border-radius:8px; text-align:right; box-shadow:0 6px 16px rgba(0,0,0,0.18); z-index:1000; pointer-events:none; display:none; }
+        .prod-pill-rm { background:none; border:0; color:#fff; cursor:pointer; font-size:12px; line-height:1; padding:0 2px; opacity:0.85; }
+        .prod-pill-rm:hover { opacity:1; }
+
         /* ═══════════ Feasibility Study Form ═══════════ */
         .fs-tab { background: transparent; color: #6b7280; border: 1px solid #e5e7eb; cursor: pointer; }
         .fs-tab:hover { background: #f9fafb; }
@@ -425,103 +442,25 @@
                         <span class="text-[#002d5d] font-bold text-sm">اختر المنتج أو الخدمة</span>
                         <span class="text-[10px] text-gray-400 mr-auto">يمكنك اختيار أكثر من خيار</span>
                     </div>
-                    <div class="p-5 space-y-4">
+                    <div class="p-5 space-y-3">
 
-                        <!-- 1. Financial Products -->
-                        <div>
-                            <div class="flex items-center gap-2 mb-3">
-                                <span class="bg-[#002d5d] text-white text-[10px] font-bold px-2 py-0.5 rounded">1</span>
-                                <span class="text-[#002d5d] font-bold text-sm">المنتجات المالية</span>
-                                <span class="info-tip">!<span class="tip-content">منتجات تمويلية تشمل قروض طويلة الأجل ورأس المال التشغيلي وتمويل الاستحواذ وحلول سلسلة التوريد.</span></span>
-                            </div>
-                            <div class="grid grid-cols-4 gap-2">
-                                <div onclick="toggleProduct(this)" data-key="project-finance" data-label="تمويل المشاريع" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
-                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">قروض طويلة الأجل (حتى 20 سنة) لتمويل تأسيس أو توسعة المصانع، بفائدة ميسرة وفترة سماح.</span></span>
-                                    <i data-lucide="building-2" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
-                                    <div class="text-xs font-bold text-gray-700">تمويل المشاريع</div>
-                                    <div class="text-[9px] text-gray-400 mt-0.5">قروض طويلة الأمد</div>
-                                </div>
-                                <div onclick="toggleProduct(this)" data-key="working-capital" data-label="رأس المال العامل" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
-                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">تمويل قصير الأجل لتغطية المصاريف اليومية والمخزون والذمم المدينة.</span></span>
-                                    <i data-lucide="refresh-cw" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
-                                    <div class="text-xs font-bold text-gray-700">رأس المال العامل</div>
-                                    <div class="text-[9px] text-gray-400 mt-0.5">تمويل التكاليف اليومية</div>
-                                </div>
-                                <div onclick="toggleProduct(this)" data-key="acquisition-finance" data-label="تمويل الاستحواذ" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
-                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">تمويل عمليات الاستحواذ على المصانع والشركات الصناعية القائمة لتعزيز التوسع.</span></span>
-                                    <i data-lucide="handshake" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
-                                    <div class="text-xs font-bold text-gray-700">تمويل الاستحواذ</div>
-                                    <div class="text-[9px] text-gray-400 mt-0.5">شراء شركات أخرى</div>
-                                </div>
-                                <div onclick="toggleProduct(this)" data-key="supply-chain" data-label="سلسلة التوريد" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
-                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">حلول لتمويل المدفوعات للموردين وتحسين دورة التدفق النقدي للمنشأة.</span></span>
-                                    <i data-lucide="link" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
-                                    <div class="text-xs font-bold text-gray-700">سلسلة التوريد</div>
-                                    <div class="text-[9px] text-gray-400 mt-0.5">تحسين التدفق النقدي</div>
-                                </div>
+                        <!-- Unsupported warning -->
+                        <div id="unsupported-warn" class="bg-amber-50 border border-amber-300 text-amber-800 rounded-lg p-3 text-xs items-start gap-2" style="display:none">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                            <div style="flex:1">
+                                <strong>تنبيه:</strong> اخترت منتجاً أو خدمة <strong>غير مدعومة حالياً</strong>. يمكنك إكمال الطلب وإرساله، ولكن لن يتم تفعيل هذه الخدمة فوراً وسيتم التواصل معك من قبل المختصين.
+                                <div id="unsupported-list" class="mt-1 text-[11px] font-bold"></div>
                             </div>
                         </div>
 
-                        <div class="border-t border-gray-100"></div>
-
-                        <!-- 2. Specialized Programs -->
-                        <div>
-                            <div class="flex items-center gap-2 mb-3">
-                                <span class="bg-[#002d5d] text-white text-[10px] font-bold px-2 py-0.5 rounded">2</span>
-                                <span class="text-[#002d5d] font-bold text-sm">البرامج المتخصصة</span>
-                                <span class="info-tip">!<span class="tip-content">برامج تمويلية متخصصة لقطاعات الجيل الرابع، الطاقة المتجددة، ورفع المحتوى المحلي بمنح وحوافز إضافية.</span></span>
-                            </div>
-                            <div class="grid grid-cols-3 gap-2">
-                                <div onclick="toggleProduct(this)" data-key="tanafusiya" data-label="تنافسية (4IR)" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
-                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">تمويل تبني تقنيات الثورة الصناعية الرابعة كالروبوتات والذكاء الاصطناعي وإنترنت الأشياء في المصانع.</span></span>
-                                    <i data-lucide="cpu" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
-                                    <div class="text-xs font-bold text-gray-700">تنافسية (الجيل الرابع)</div>
-                                    <div class="text-[9px] text-gray-400 mt-0.5">الأتمتة والتصنيع الذكي</div>
-                                </div>
-                                <div onclick="toggleProduct(this)" data-key="renewable-energy" data-label="الطاقة المتجددة" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
-                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">تمويل مشاريع الطاقة الشمسية وطاقة الرياح ومحطات تخزين الطاقة بشروط ميسرة.</span></span>
-                                    <i data-lucide="zap" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
-                                    <div class="text-xs font-bold text-gray-700">الطاقة المتجددة</div>
-                                    <div class="text-[9px] text-gray-400 mt-0.5">مشاريع الطاقة النظيفة</div>
-                                </div>
-                                <div onclick="toggleProduct(this)" data-key="local-content" data-label="المحتوى المحلي" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
-                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">دعم المشاريع التي ترفع نسبة المحتوى المحلي وتحل محل المنتجات المستوردة.</span></span>
-                                    <i data-lucide="flag" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
-                                    <div class="text-xs font-bold text-gray-700">المحتوى المحلي</div>
-                                    <div class="text-[9px] text-gray-400 mt-0.5">استبدال الواردات</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="border-t border-gray-100"></div>
-
-                        <!-- 3. Support Services -->
-                        <div>
-                            <div class="flex items-center gap-2 mb-3">
-                                <span class="bg-[#002d5d] text-white text-[10px] font-bold px-2 py-0.5 rounded">3</span>
-                                <span class="text-[#002d5d] font-bold text-sm">خدمات الدعم</span>
-                                <span class="info-tip">!<span class="tip-content">خدمات استشارية وضمانات وبرامج خاصة لدعم المنشآت الصناعية الصغيرة والمتوسطة.</span></span>
-                            </div>
-                            <div class="grid grid-cols-3 gap-2">
-                                <div onclick="toggleProduct(this)" data-key="advisory" data-label="الاستشارات" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
-                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">خدمات استشارية فنية ومالية لمساعدة المنشأة في إعداد دراسات الجدوى وتطوير الأعمال.</span></span>
-                                    <i data-lucide="users" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
-                                    <div class="text-xs font-bold text-gray-700">الاستشارات</div>
-                                    <div class="text-[9px] text-gray-400 mt-0.5">استشارات فنية ومالية</div>
-                                </div>
-                                <div onclick="toggleProduct(this)" data-key="sme-support" data-label="دعم المنشآت الصغيرة" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
-                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">برامج تمويل بشروط ميسرة وخطط سداد مرنة مخصصة للمنشآت الصغيرة والمتوسطة.</span></span>
-                                    <i data-lucide="store" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
-                                    <div class="text-xs font-bold text-gray-700">دعم المنشآت الصغيرة</div>
-                                    <div class="text-[9px] text-gray-400 mt-0.5">خطط سداد مرنة</div>
-                                </div>
-                                <div onclick="toggleProduct(this)" data-key="guarantees" data-label="الضمانات" class="pcard relative border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-green-400 transition-all text-center">
-                                    <span class="info-tip" style="position:absolute;top:6px;right:6px;margin:0" onclick="event.stopPropagation()">!<span class="tip-content">ضمانات ائتمانية تسهّل حصول المنشأة على تسهيلات بنكية إضافية.</span></span>
-                                    <i data-lucide="shield-check" class="w-5 h-5 text-gray-400 mx-auto mb-1"></i>
-                                    <div class="text-xs font-bold text-gray-700">الضمانات</div>
-                                    <div class="text-[9px] text-gray-400 mt-0.5">ائتمان بنكي</div>
-                                </div>
-                            </div>
+                        <!-- Dropdown trigger -->
+                        <div class="relative" id="prod-dd-wrap">
+                            <button type="button" id="prod-dd-toggle" onclick="toggleProdDropdown(event)"
+                                class="w-full border-2 border-gray-200 rounded-lg px-4 py-3 text-right flex items-center justify-between hover:border-green-400 transition-all bg-white">
+                                <span class="text-xs text-gray-500" id="prod-dd-label">— اختر منتجاً أو خدمة —</span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400" id="prod-dd-chevron" style="transition:transform 0.2s"></i>
+                            </button>
+                            <div id="prod-dd-menu" class="hidden absolute right-0 left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg" style="z-index:40;max-height:24rem;overflow-y:auto"></div>
                         </div>
 
                         <!-- Selected pills -->
@@ -1517,50 +1456,175 @@
             });
         }
 
-        // ── Step 2 state ──────────────────────────────────────────────
+        // ── Step 2 state — product / service dropdown ─────────────────
+        const PRODUCT_CATALOG = [
+            { group: 'المنتجات المالية', items: [
+                { key:'project-finance',     code:'FP-01', label:'تمويل المشاريع',         desc:'قروض طويلة الأجل (حتى 20 سنة) لتمويل تأسيس أو توسعة المصانع، بفائدة ميسرة وفترة سماح.', supported:true },
+                { key:'working-capital',     code:'FP-02', label:'رأس المال العامل',        desc:'تمويل قصير الأجل لتغطية المصاريف اليومية والمخزون والذمم المدينة.', supported:true },
+                { key:'acquisition-finance', code:'FP-03', label:'تمويل الاستحواذ',         desc:'تمويل عمليات الاستحواذ على المصانع والشركات الصناعية القائمة لتعزيز التوسع.', supported:true },
+                { key:'supply-chain',        code:'FP-04', label:'سلسلة التوريد',           desc:'حلول لتمويل المدفوعات للموردين وتحسين دورة التدفق النقدي للمنشأة.', supported:true },
+                { key:'trade-finance',       code:'FP-05', label:'تمويل التجارة الدولية',   desc:'تمويل عمليات التصدير والاستيراد وخطابات الاعتماد البنكية للمنشآت الصناعية.', supported:false },
+            ]},
+            { group: 'البرامج المتخصصة', items: [
+                { key:'tanafusiya',          code:'SP-01', label:'تنافسية (الجيل الرابع)', desc:'تمويل تبني تقنيات الثورة الصناعية الرابعة كالروبوتات والذكاء الاصطناعي وإنترنت الأشياء في المصانع.', supported:true },
+                { key:'renewable-energy',    code:'SP-02', label:'الطاقة المتجددة',         desc:'تمويل مشاريع الطاقة الشمسية وطاقة الرياح ومحطات تخزين الطاقة بشروط ميسرة.', supported:true },
+                { key:'local-content',       code:'SP-03', label:'المحتوى المحلي',          desc:'دعم المشاريع التي ترفع نسبة المحتوى المحلي وتحل محل المنتجات المستوردة.', supported:true },
+                { key:'emerging-tech',       code:'SP-04', label:'التقنيات الناشئة',        desc:'برنامج خاص لتمويل تبني تقنيات الجيل الجديد كالطباعة ثلاثية الأبعاد والمواد المتقدمة.', supported:false },
+            ]},
+            { group: 'خدمات الدعم', items: [
+                { key:'advisory',            code:'SS-01', label:'الاستشارات',              desc:'خدمات استشارية فنية ومالية لمساعدة المنشأة في إعداد دراسات الجدوى وتطوير الأعمال.', supported:true },
+                { key:'sme-support',         code:'SS-02', label:'دعم المنشآت الصغيرة',    desc:'برامج تمويل بشروط ميسرة وخطط سداد مرنة مخصصة للمنشآت الصغيرة والمتوسطة.', supported:true },
+                { key:'guarantees',          code:'SS-03', label:'الضمانات',                desc:'ضمانات ائتمانية تسهّل حصول المنشأة على تسهيلات بنكية إضافية.', supported:true },
+                { key:'training',            code:'SS-04', label:'برامج التدريب',           desc:'برامج تدريبية متخصصة لتأهيل الكوادر الصناعية ورفع كفاءتها التشغيلية.', supported:false },
+            ]},
+        ];
+        const PROD_INDEX = {};
+        PRODUCT_CATALOG.forEach(g => g.items.forEach(i => { PROD_INDEX[i.key] = i; }));
+
         var selectedProducts = {};
 
-        function toggleProduct(card) {
-            var key   = card.getAttribute('data-key');
-            var label = card.getAttribute('data-label');
-            var icon  = card.querySelector('i');
-            var active = !!selectedProducts[key];
+        function _esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-            if (active) {
-                delete selectedProducts[key];
-                card.style.borderColor  = '#e5e7eb';
-                card.style.background   = '';
-                if (icon) icon.style.color = '#9ca3af';
-                var badge = card.querySelector('.pcheck');
-                if (badge) badge.remove();
+        function renderProdDropdown() {
+            const menu = document.getElementById('prod-dd-menu');
+            if (!menu) return;
+            let html = '';
+            PRODUCT_CATALOG.forEach(g => {
+                html += `<div class="prod-group-h">${_esc(g.group)}</div>`;
+                g.items.forEach(p => {
+                    const active = !!selectedProducts[p.key];
+                    html += `<div class="prod-opt ${active?'active':''} ${p.supported?'':'unsupp'}" data-key="${_esc(p.key)}" onclick="selectProduct('${_esc(p.key)}')">
+                        <span class="prod-check">${active?'✓':''}</span>
+                        <span class="prod-code">${_esc(p.code)}</span>
+                        <span class="text-xs font-bold text-gray-700" style="flex:1">${_esc(p.label)}</span>
+                        ${p.supported?'':'<span class="prod-unsupp-badge">غير مدعوم</span>'}
+                        <span class="prod-info" data-tip="${_esc(p.desc)}"
+                            onmouseenter="showProdTip(event,this)" onmouseleave="hideProdTip()"
+                            onclick="event.stopPropagation()">!</span>
+                    </div>`;
+                });
+            });
+            menu.innerHTML = html;
+        }
+
+        function toggleProdDropdown(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('prod-dd-menu');
+            const chev = document.getElementById('prod-dd-chevron');
+            if (!menu) return;
+            const open = !menu.classList.contains('hidden');
+            if (open) {
+                menu.classList.add('hidden');
+                if (chev) chev.style.transform = '';
             } else {
-                selectedProducts[key] = label;
-                card.style.borderColor  = '#28a745';
-                card.style.background   = '#f0fdf4';
-                if (icon) icon.style.color = '#28a745';
-                if (!card.querySelector('.pcheck')) {
-                    var b = document.createElement('span');
-                    b.className = 'pcheck';
-                    b.style.cssText = 'position:absolute;top:4px;left:4px;background:#28a745;color:#fff;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700';
-                    b.textContent = '✓';
-                    card.style.position = 'relative';
-                    card.appendChild(b);
-                }
+                renderProdDropdown();
+                menu.classList.remove('hidden');
+                if (chev) chev.style.transform = 'rotate(180deg)';
             }
+        }
 
-            var keys    = Object.keys(selectedProducts);
-            var summary = document.getElementById('selected-summary');
-            var pills   = document.getElementById('selected-pills');
+        document.addEventListener('click', function(e) {
+            const wrap = document.getElementById('prod-dd-wrap');
+            if (!wrap) return;
+            if (!wrap.contains(e.target)) {
+                const menu = document.getElementById('prod-dd-menu');
+                const chev = document.getElementById('prod-dd-chevron');
+                if (menu) menu.classList.add('hidden');
+                if (chev) chev.style.transform = '';
+                hideProdTip();
+            }
+        });
+
+        function selectProduct(key) {
+            const p = PROD_INDEX[key];
+            if (!p) return;
+            if (selectedProducts[key]) {
+                delete selectedProducts[key];
+            } else {
+                selectedProducts[key] = p.code + ' · ' + p.label;
+            }
+            renderProdDropdown();
+            refreshSelectedPills();
+            refreshUnsupportedWarning();
+            if (typeof updatePreview === 'function') updatePreview();
+        }
+
+        function refreshSelectedPills() {
+            const keys = Object.keys(selectedProducts);
+            const summary = document.getElementById('selected-summary');
+            const pills   = document.getElementById('selected-pills');
+            const label   = document.getElementById('prod-dd-label');
+            if (!summary || !pills) return;
             if (keys.length) {
                 summary.style.display = 'flex';
                 pills.innerHTML = keys.map(function(k) {
-                    return '<span style="background:#002d5d;color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:999px">' + selectedProducts[k] + '</span>';
+                    const p = PROD_INDEX[k];
+                    const bg = (p && !p.supported) ? '#d97706' : '#002d5d';
+                    const code = p ? p.code : '';
+                    const lab  = p ? p.label : selectedProducts[k];
+                    return '<span style="background:'+bg+';color:#fff;font-size:9px;font-weight:700;padding:3px 4px 3px 8px;border-radius:999px;display:inline-flex;align-items:center;gap:5px">' +
+                           '<span style="background:rgba(255,255,255,0.22);padding:1px 5px;border-radius:3px;font-family:ui-monospace,monospace;letter-spacing:0.3px">'+_esc(code)+'</span>' +
+                           _esc(lab) +
+                           '<button class="prod-pill-rm" onclick="selectProduct(\''+_esc(k)+'\');event.stopPropagation()" aria-label="إزالة">×</button>' +
+                           '</span>';
                 }).join('');
+                if (label) {
+                    label.textContent = keys.length + ' عنصر مختار — اضغط للتعديل';
+                    label.classList.remove('text-gray-500');
+                    label.classList.add('text-[#002d5d]','font-bold');
+                }
             } else {
                 summary.style.display = 'none';
                 pills.innerHTML = '';
+                if (label) {
+                    label.textContent = '— اختر منتجاً أو خدمة —';
+                    label.classList.remove('text-[#002d5d]','font-bold');
+                    label.classList.add('text-gray-500');
+                }
             }
-            updatePreview();
+        }
+
+        function refreshUnsupportedWarning() {
+            const warn = document.getElementById('unsupported-warn');
+            const list = document.getElementById('unsupported-list');
+            if (!warn || !list) return;
+            const bad = Object.keys(selectedProducts).map(k => PROD_INDEX[k]).filter(p => p && !p.supported);
+            if (bad.length) {
+                warn.style.display = 'flex';
+                list.textContent = bad.map(p => p.code + ' · ' + p.label).join('  •  ');
+            } else {
+                warn.style.display = 'none';
+                list.textContent = '';
+            }
+        }
+
+        let _prodTipEl = null;
+        function showProdTip(e, el) {
+            if (!_prodTipEl) {
+                _prodTipEl = document.createElement('div');
+                _prodTipEl.id = 'prod-float-tip';
+                document.body.appendChild(_prodTipEl);
+            }
+            _prodTipEl.textContent = el.getAttribute('data-tip') || '';
+            _prodTipEl.style.display = 'block';
+            const r = el.getBoundingClientRect();
+            const tr = _prodTipEl.getBoundingClientRect();
+            let top = r.top - tr.height - 8;
+            let left = r.left + r.width/2 - tr.width/2;
+            if (top < 8) top = r.bottom + 8;
+            if (left < 8) left = 8;
+            if (left + tr.width > window.innerWidth - 8) left = window.innerWidth - tr.width - 8;
+            _prodTipEl.style.top = top + 'px';
+            _prodTipEl.style.left = left + 'px';
+        }
+        function hideProdTip() {
+            if (_prodTipEl) _prodTipEl.style.display = 'none';
+        }
+
+        // Compatibility shim — anything still calling toggleProduct(card) routes here
+        function toggleProduct(card) {
+            const key = card && card.getAttribute && card.getAttribute('data-key');
+            if (key) selectProduct(key);
         }
 
         function handleFiles(files) {
