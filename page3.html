@@ -620,6 +620,16 @@
                                                 </table>
                                             </div>
                                             <button type="button" onclick="fsAddRow('products')" class="mt-2 text-[11px] text-[#16a34a] font-bold flex items-center gap-1 hover:underline"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> إضافة منتج</button>
+                                            <div id="fs-prod-unsupp" class="mt-3 bg-amber-50 border border-amber-300 text-amber-800 rounded-lg p-3 text-xs" style="display:none">
+                                                <div class="flex items-start gap-2">
+                                                    <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                                                    <div style="flex:1">
+                                                        <strong>تنبيه:</strong> المنتجات التالية <strong>لا يمولها الصندوق الصناعي حالياً للمشاريع الجديدة</strong>. يمكنك إكمال الدراسة وإرسالها، وسيتم التواصل معك من قبل المختصين.
+                                                        <ul id="fs-prod-unsupp-list" class="mt-1.5 list-disc pr-4 font-bold text-[11px] space-y-0.5"></ul>
+                                                        <div class="mt-1.5 text-[10px] text-amber-600 font-normal">القائمة قابلة للتغيير في أي وقت دون إشعار مسبق — آخر تحديث: نهاية الربع الثاني 2025م.</div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             <label class="block text-xs text-[#002d5d] font-bold mt-3 mb-1">وصف تفصيلي للمنتج</label>
                                             <textarea data-fs="m.productDesc" oninput="fsOnInput()" rows="2" class="fs-input w-full border border-gray-200 rounded-lg p-2 text-xs resize-none" style="text-align:right"></textarea>
                                             <label class="block text-xs text-[#002d5d] font-bold mt-2 mb-1">المعايير السعودية/الدولية المطبقة</label>
@@ -1739,9 +1749,63 @@
 
         function fsCellEdit(name, i, key, value) {
             fsTableData(name)[i][key] = value;
+            if (name === 'products' && key === 'name') fsCheckUnsupportedProducts();
             fsRecalc();
             fsRenderPreview();
             fsScheduleSave();
+        }
+
+        // Industrial products NOT financed by SIDF for new projects (Q2 2025)
+        const FS_UNSUPPORTED_PRODUCTS = [
+            'الأنابيب المجوفة','الأنابيب الفخارية المزججة','أنابيب حديدية للضغط العالي والمتوسط والمنخفض','أنابيب مسبقة العزل',
+            'حجر الأرصفة الكربستون','بلاط الأرصفة الإنترلوك','البلوك والبلاط الإسمنتي','ألواح الخرسانة مسبقة الصب','بلاط كسر الرخام والموزاييك','بلوك حراري معزول','بلوك البوزلان البركاني','كسارات البحص','قص وتشكيل الحجر','الخرسانة الجاهزة','المباني الجاهزة التقليدية',
+            'هياكل الإنشاءات الحديدية','الأبراج الحديدية','تجهيز ودهان اللفائف الصاج الحديدية','خزانات حديدية','براميل حديدية','تقطيع وتدوير الحديد الخردة',
+            'تشكيل ألمنيوم','أبواب ونوافذ الألومنيوم','علب المشروبات الغازية',
+            'أكياس الورق','كرتون الدوبلكس والمضلع','صناعة الدفاتر المدرسية','ورق الصحف والكتابة','المناديل الورقية','أطباق البيض','ملصقات الصمغ السائل',
+            'المنتجات البلاستيكية الاستهلاكية التقليدية','الرغوة الصناعية والمضغوطة','بودرة بولي إيثيلين منخفض الكثافة الملونة',
+            'خزانات الألياف الزجاجية','حمض الكبريتيك','كيماويات البناء','بودرة باريت','الاسفلت والبيتومين الخام',
+            'تعبئة اللحوم','تعبئة التمور','مصانع الثلج','مياه الشرب المعبأة',
+            'دباغة الجلود','الطباعة التجارية','إعادة تدوير زيوت التشحيم'
+        ];
+
+        function fsNormalizeAr(s) {
+            return String(s || '')
+                .replace(/[ً-ْٰ]/g, '')   // diacritics
+                .replace(/[إأآا]/g, 'ا')                  // alef variants
+                .replace(/ى/g, 'ي').replace(/ة/g, 'ه')
+                .replace(/ـ/g, '')                        // tatweel
+                .replace(/^ال/, '').replace(/\s+/g, ' ')
+                .trim().toLowerCase();
+        }
+
+        function fsCheckUnsupportedProducts() {
+            const box = document.getElementById('fs-prod-unsupp');
+            const ul = document.getElementById('fs-prod-unsupp-list');
+            if (!box || !ul) return;
+            const normUnsupp = FS_UNSUPPORTED_PRODUCTS.map(p => ({ raw: p, n: fsNormalizeAr(p) }));
+            const hits = [];
+            ['local','gulf','export'].forEach(m => {
+                (fsState.marketRows[m].products || []).forEach(r => {
+                    const entered = (r.name || '').trim();
+                    if (entered.length < 3) return;
+                    const ne = fsNormalizeAr(entered);
+                    const match = normUnsupp.find(u => ne.includes(u.n) || u.n.includes(ne));
+                    if (match && !hits.some(h => h.entered === entered)) hits.push({ entered: entered, official: match.raw });
+                });
+            });
+            if (hits.length) {
+                ul.innerHTML = hits.map(h =>
+                    '<li>' + h.entered.replace(/</g,'&lt;') +
+                    (fsNormalizeAr(h.entered) !== fsNormalizeAr(h.official)
+                        ? ' <span class="font-normal text-amber-600">(مصنّف ضمن: ' + h.official + ')</span>'
+                        : '') +
+                    '</li>'
+                ).join('');
+                box.style.display = 'block';
+                if (window.lucide) lucide.createIcons();
+            } else {
+                box.style.display = 'none';
+            }
         }
 
         function fsAddRow(name) {
@@ -1860,6 +1924,7 @@
             });
             fsRecalc();
             fsRenderPreview();
+            fsCheckUnsupportedProducts();
             fsScheduleSave();
         }
 
@@ -2127,6 +2192,7 @@
             if (cb && cb.checked) document.getElementById('fs-licensing-block').classList.remove('hidden');
             fsRecalc();
             fsRenderPreview();
+            fsCheckUnsupportedProducts();
             fsUpdateProgress();
             // Auto-save every 30s
             setInterval(fsSave, 30000);
