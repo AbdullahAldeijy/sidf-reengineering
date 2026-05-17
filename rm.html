@@ -171,6 +171,22 @@
         </div>
     </div>
 
+    <!-- Submitted-document PDF viewer -->
+    <div id="doc-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4" onclick="if(event.target===this)closeDocModal()">
+        <div class="w-full max-w-2xl">
+            <div class="flex items-center justify-between mb-2">
+                <div id="doc-modal-name" class="text-white text-sm font-bold flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4"></i> <span>—</span></div>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.print()" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="download" class="w-3 h-3"></i> تنزيل</button>
+                    <button onclick="closeDocModal()" class="bg-white/10 hover:bg-white/20 text-white p-1.5 rounded-lg"><i data-lucide="x" class="w-4 h-4"></i></button>
+                </div>
+            </div>
+            <div style="background:#525659;padding:16px;border-radius:8px;height:76vh;overflow-y:auto">
+                <div id="doc-modal-page" style="background:#fff;padding:34px 30px;border-radius:2px;box-shadow:0 1px 4px rgba(0,0,0,0.35);direction:rtl;color:#1f2937;font-size:12px;line-height:1.75;font-family:'Cairo',sans-serif"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         lucide.createIcons();
 
@@ -217,9 +233,81 @@
             lucide.createIcons();
         }
 
+        let modalOrder = null;
+
+        function attachedFilesHtml() {
+            return Object.entries(submittedDocs).map(([k, d]) => `
+                <button type="button" onclick="openSubmittedDoc('${k}')" class="w-full flex items-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg px-2.5 py-2 text-right transition-colors group">
+                    <i data-lucide="file-text" class="w-4 h-4 text-red-500 shrink-0"></i>
+                    <span class="text-xs text-gray-700 flex-1">${d.title}</span>
+                    <span class="text-[9px] text-gray-400 group-hover:text-[#28a745] font-mono">${d.file}</span>
+                    <i data-lucide="external-link" class="w-3 h-3 text-gray-300 group-hover:text-[#28a745]"></i>
+                </button>`).join('');
+        }
+
+        const docRow = (k, v) => `<div style="display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280">${k}</span><span style="font-weight:700;color:#111827;text-align:left">${v}</span></div>`;
+        const docHeading = (t) => `<div style="color:#002d5d;font-size:13px;font-weight:700;margin:20px 0 6px;padding-bottom:4px;border-bottom:2px solid #e5e7eb">${t}</div>`;
+
+        const submittedDocs = {
+            fs: {
+                file: 'feasibility_study.pdf', title: 'دراسة الجدوى',
+                body: (o) => docHeading('ملخص المشروع')
+                    + docRow('اسم المشروع', o.name || '—')
+                    + docRow('القطاع', o.sector || '—')
+                    + docRow('موقع المشروع', o.city || '—')
+                    + docHeading('الجوانب المالية')
+                    + docRow('التكلفة الإجمالية للمشروع', '12,500,000 ر.س')
+                    + docRow('نسبة المساهمة الذاتية', '30%')
+                    + docRow('مبلغ التمويل المطلوب من الصندوق', (o.amount || '—') + ' ر.س')
+                    + docRow('أُعدّت بواسطة', 'مكتب استشاري معتمد')
+                    + `<p style="margin-top:16px;color:#4b5563;font-size:11px">تتضمن دراسة الجدوى تحليلاً للسوق المستهدف، الطاقة الإنتاجية المتوقعة، والتدفقات النقدية للسنوات الخمس الأولى من تشغيل المشروع.</p>`
+            },
+            fin: {
+                file: 'audited_financials.pdf', title: 'القوائم المالية المدققة',
+                body: (o) => docHeading('بيانات المراجعة')
+                    + docRow('السنوات المشمولة', '2022 - 2024')
+                    + docRow('مكتب المراجعة', 'مكتب محاسبة قانونية')
+                    + docHeading('أبرز المؤشرات')
+                    + docRow('إجمالي الأصول', '8,300,000 ر.س')
+                    + docRow('صافي الربح (آخر سنة)', '1,150,000 ر.س')
+                    + `<p style="margin-top:16px;color:#4b5563;font-size:11px">القوائم مدققة من مكتب محاسبة قانونية معتمد وتعكس المركز المالي للمنشأة خلال الفترة المشمولة.</p>`
+            },
+            nw: {
+                file: 'net_worth_statement.pdf', title: 'إقرار صافي الثروة',
+                body: (o) => docHeading('بيان صافي الثروة')
+                    + docRow('إجمالي صافي الثروة', '21,000,000 ر.س')
+                    + docRow('الأصول العقارية', '14,000,000 ر.س')
+                    + docRow('أصول نقدية واستثمارات', '7,000,000 ر.س')
+                    + docRow('تاريخ الإقرار', '2026-04-10')
+                    + `<p style="margin-top:16px;color:#4b5563;font-size:11px">إقرار موقّع من مالك المنشأة بصافي الثروة الشخصية كضمان داعم للطلب.</p>`
+            }
+        };
+
+        function openSubmittedDoc(key) {
+            const d = submittedDocs[key];
+            if (!d) return;
+            const o = modalOrder || {};
+            document.querySelector('#doc-modal-name span').textContent = d.file;
+            document.getElementById('doc-modal-page').innerHTML = `
+                <div style="text-align:center;border-bottom:2px solid #002d5d;padding-bottom:14px;margin-bottom:6px">
+                    <div style="color:#002d5d;font-size:18px;font-weight:700">${d.title}</div>
+                    <div style="color:#6b7280;font-size:10px;margin-top:4px">صندوق التنمية الصناعية السعودي — مستند مقدّم ضمن الطلب</div>
+                    <div style="color:#9ca3af;font-size:9px;margin-top:3px">${o.id || ''}${o.name ? ' · ' + o.name : ''}</div>
+                </div>
+                ${d.body(o)}
+                <div style="border-top:1px solid #e5e7eb;padding-top:10px;margin-top:26px;text-align:center;color:#9ca3af;font-size:9px">وثيقة مقدّمة من العميل ضمن طلب التمويل — SIDF</div>`;
+            document.getElementById('doc-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeDocModal() {
+            document.getElementById('doc-modal').classList.add('hidden');
+        }
+
         function openProjectModal(id) {
             const o = orders.find(x => x.id === id);
             if (!o) return;
+            modalOrder = o;
             document.getElementById('modal-title').textContent = `${o.id} — ${o.name}`;
             document.getElementById('modal-subtitle').textContent = `${o.sector} · ${o.city} · ${o.amount} ر.س`;
 
@@ -275,11 +363,8 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div class="border border-gray-100 rounded-lg p-4">
                         <div class="text-xs font-bold text-[#002d5d] mb-2 flex items-center gap-2"><i data-lucide="file-stack" class="w-4 h-4 text-indigo-500"></i> الملفات المرفقة</div>
-                        <ul class="text-xs text-gray-600 space-y-1">
-                            <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-green-500"></i> دراسة الجدوى</li>
-                            <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-green-500"></i> القوائم المالية المدققة</li>
-                            <li class="flex items-center gap-2"><i data-lucide="check" class="w-3 h-3 text-green-500"></i> صافي الثروة</li>
-                        </ul>
+                        <div class="text-[9px] text-gray-400 mb-2">اضغط على أي ملف لعرض الطلب المقدّم من العميل</div>
+                        <div class="space-y-1.5">${attachedFilesHtml()}</div>
                     </div>
                     <div class="border border-gray-100 rounded-lg p-4">
                         <div class="text-xs font-bold text-[#002d5d] mb-2 flex items-center gap-2"><i data-lucide="alert-triangle" class="w-4 h-4 text-orange-500"></i> النواقص</div>
@@ -298,9 +383,14 @@
 
                 <div class="flex justify-between items-center pt-3 border-t border-gray-100">
                     <button onclick="closeProjectModal()" class="bg-white border border-gray-200 text-gray-600 px-5 py-2 rounded-lg text-xs font-bold hover:bg-gray-50">إغلاق</button>
-                    <a href="rm-chats.html?order=${o.id}" class="bg-[#28a745] hover:bg-green-700 text-white px-5 py-2 rounded-lg text-xs font-bold shadow flex items-center gap-2">
-                        <i data-lucide="message-square" class="w-3 h-3"></i> فتح المحادثة
-                    </a>
+                    <div class="flex items-center gap-2">
+                        <a href="rm-workload.html?order=${o.id}" class="bg-[#002d5d] hover:bg-[#013a78] text-white px-5 py-2 rounded-lg text-xs font-bold shadow flex items-center gap-2">
+                            <i data-lucide="share-2" class="w-3 h-3"></i> اذهب للتوزيع
+                        </a>
+                        <a href="rm-chats.html?order=${o.id}" class="bg-[#28a745] hover:bg-green-700 text-white px-5 py-2 rounded-lg text-xs font-bold shadow flex items-center gap-2">
+                            <i data-lucide="message-square" class="w-3 h-3"></i> فتح المحادثة
+                        </a>
+                    </div>
                 </div>
             `;
 
